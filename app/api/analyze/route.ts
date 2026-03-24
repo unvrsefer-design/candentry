@@ -5,24 +5,15 @@ import { getDocument } from "pdfjs-serverless";
 
 export const runtime = "nodejs";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
-
 type RecruiterMode =
   | "strict"
   | "balanced"
   | "growth"
   | "candidateFriendly";
-type FinalDecision = "Hire" | "Consider" | "Reject";
 
 type AnalysisResult = {
   hireScore: number;
-  finalDecision: FinalDecision;
+  finalDecision: "Hire" | "Consider" | "Reject";
   technicalMatch: number;
   experienceMatch: number;
   riskScore: number;
@@ -33,122 +24,131 @@ type AnalysisResult = {
   reasoning: string;
 };
 
+type InterviewPlan = {
+  interviewerNote: string;
+  technicalQuestions: string[];
+  behavioralQuestions: string[];
+};
+
+type ModelAnalysisOutput = {
+  raw: string;
+  analysis: AnalysisResult;
+  interviewPlan: InterviewPlan | null;
+};
+
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
+
+const anthropic = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : null;
+
 function getModeInstruction(mode: RecruiterMode) {
   switch (mode) {
     case "strict":
       return `
-You are acting as a strict senior recruiter.
-Be highly selective.
-Penalize missing domain fit heavily.
-Reject candidates who are not clearly aligned.
+Be strict and selective.
+Penalize weak relevance, low evidence, and missing core requirements.
+Recommend only clearly strong candidates.
 `;
-
     case "growth":
       return `
-You are acting as a recruiter who prioritizes growth potential.
-Value transferable skills, adaptability, and learning ability.
-Do not reject purely for domain gaps if upside is strong.
+Value growth potential and transferable skills.
+Be more optimistic about coachable candidates with strong upside.
 `;
-
     case "candidateFriendly":
       return `
-You are acting as a candidate-friendly recruiter.
-Be constructive, fair, and encouraging.
-Present risks with nuance and professionalism.
-Prefer Consider over Reject when upside is credible.
-Avoid unnecessarily harsh language.
+Be constructive and candidate-friendly.
+Still be honest, but avoid unnecessarily harsh framing.
 `;
-
     case "balanced":
     default:
       return `
-You are acting as a balanced senior recruiter.
-Be fair, evidence-based, and commercially sensible.
-Weigh strengths and risks evenly.
+Be balanced and fair.
+Evaluate strengths and risks evenly.
 `;
   }
 }
 
-function buildPrompt(
-  mode: RecruiterMode,
-  jobDescription: string,
-  extractedText: string
-) {
-  return `
-${getModeInstruction(mode)}
+async function extractPdfText(file: File) {
+  const arrayBuffer = await file.arrayBuffer();
 
-Analyze this candidate CV against the job description.
+  const pdf = await getDocument({
+    data: new Uint8Array(arrayBuffer),
+    useSystemFonts: true,
+  }).promise;
 
-Return STRICT JSON only.
-Do not use markdown.
-Do not explain anything outside JSON.
-All numeric values must be numbers, not words.
+  let extractedText = "";
 
-JSON format:
-{
-  "hireScore": number,
-  "finalDecision": "Hire" | "Consider" | "Reject",
-  "technicalMatch": number,
-  "experienceMatch": number,
-  "riskScore": number,
-  "strengths": string[],
-  "risks": string[],
-  "missingSkills": string[],
-  "growthPotential": string,
-  "reasoning": string
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+
+    const strings = content.items.map((item: any) =>
+      "str" in item ? item.str : ""
+    );
+
+    extractedText += strings.join(" ") + "\n";
+  }
+
+  return extractedText;
 }
 
-Job Description:
-${jobDescription}
-
-Candidate CV:
-${extractedText}
-`;
-}
-
-function sanitizeJsonText(text: string) {
+function sanitizeJson(text: string) {
   return text.replace(/```json/gi, "").replace(/```/g, "").trim();
 }
 
-function normalizeDecision(value: unknown): FinalDecision {
-  if (value === "Hire" || value === "Consider" || value === "Reject") {
-    return value;
-  }
-  return "Reject";
-}
-
-function ensureStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((item) => String(item));
-}
-
-function normalizeResult(value: any): AnalysisResult {
+function normalizeAnalysis(parsed: any): AnalysisResult {
   return {
-    hireScore: Number(value?.hireScore ?? 0),
-    finalDecision: normalizeDecision(value?.finalDecision),
-    technicalMatch: Number(value?.technicalMatch ?? 0),
-    experienceMatch: Number(value?.experienceMatch ?? 0),
-    riskScore: Number(value?.riskScore ?? 0),
-    strengths: ensureStringArray(value?.strengths),
-    risks: ensureStringArray(value?.risks),
-    missingSkills: ensureStringArray(value?.missingSkills),
-    growthPotential: String(value?.growthPotential ?? "N/A"),
-    reasoning: String(value?.reasoning ?? "N/A"),
+    hireScore: Number(parsed?.hireScore ?? 0),
+    finalDecision:
+      parsed?.finalDecision === "Hire" ||
+      parsed?.finalDecision === "Consider" ||
+      parsed?.finalDecision === "Reject"
+        ? parsed.finalDecision
+        : "Reject",
+    technicalMatch: Number(parsed?.technicalMatch ?? 0),
+    experienceMatch: Number(parsed?.experienceMatch ?? 0),
+    riskScore: Number(parsed?.riskScore ?? 0),
+    strengths: Array.isArray(parsed?.strengths) ? parsed.strengths : [],
+    risks: Array.isArray(parsed?.risks) ? parsed.risks : [],
+    missingSkills: Array.isArray(parsed?.missingSkills)
+      ? parsed.missingSkills
+      : [],
+    growthPotential: parsed?.growthPotential || "",
+    reasoning: parsed?.reasoning || "",
   };
 }
 
-async function repairJsonWithOpenAI(rawText: string) {
-  const repairPrompt = `
-Convert the following malformed JSON into STRICT valid JSON only.
+function normalizeInterviewPlan(parsed: any): InterviewPlan | null {
+  if (!parsed) return null;
 
-Rules:
-- Return valid JSON only
-- No markdown
-- No explanations
-- Convert written numbers like "sixty five" into numeric values like 65
-- Preserve meaning as closely as possible
+  return {
+    interviewerNote: parsed?.interviewerNote || "",
+    technicalQuestions: Array.isArray(parsed?.technicalQuestions)
+      ? parsed.technicalQuestions
+      : [],
+    behavioralQuestions: Array.isArray(parsed?.behavioralQuestions)
+      ? parsed.behavioralQuestions
+      : [],
+  };
+}
 
-Target schema:
+function buildAnalysisPrompt(params: {
+  extractedText: string;
+  jobDescription: string;
+  mode: RecruiterMode;
+}) {
+  return `
+You are a senior recruiter.
+
+${getModeInstruction(params.mode)}
+
+Evaluate this candidate CV against the job description.
+
+Return STRICT JSON only.
+
 {
   "hireScore": number,
   "finalDecision": "Hire" | "Consider" | "Reject",
@@ -159,51 +159,71 @@ Target schema:
   "risks": string[],
   "missingSkills": string[],
   "growthPotential": string,
-  "reasoning": string
-}
-
-Malformed JSON:
-${rawText}
-`;
-
-  const response = await openai.responses.create({
-    model: "gpt-4.1-mini",
-    input: repairPrompt,
-  });
-
-  return sanitizeJsonText(response.output_text || "{}");
-}
-
-async function parsePossiblyBrokenJson(rawText: string) {
-  const cleaned = sanitizeJsonText(rawText);
-
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    const repaired = await repairJsonWithOpenAI(cleaned);
-    return JSON.parse(repaired);
+  "reasoning": string,
+  "interviewPlan": {
+    "interviewerNote": string,
+    "technicalQuestions": string[],
+    "behavioralQuestions": string[]
   }
 }
 
-async function analyzeWithOpenAI(prompt: string) {
+Rules:
+- Scores must be between 0 and 100
+- strengths max 5
+- risks max 5
+- missingSkills max 5
+- technicalQuestions max 5
+- behavioralQuestions max 5
+- reasoning should be concise but specific
+
+Job Description:
+${params.jobDescription}
+
+Candidate CV:
+${params.extractedText}
+`;
+}
+
+async function analyzeWithOpenAI(params: {
+  extractedText: string;
+  jobDescription: string;
+  mode: RecruiterMode;
+}): Promise<ModelAnalysisOutput> {
+  if (!openai) {
+    throw new Error("OPENAI_API_KEY is missing");
+  }
+
+  const prompt = buildAnalysisPrompt(params);
+
   const response = await openai.responses.create({
     model: "gpt-4.1-mini",
     input: prompt,
   });
 
-  const raw = response.output_text || "{}";
-  const parsed = await parsePossiblyBrokenJson(raw);
+  const raw = sanitizeJson(response.output_text || "{}");
+  const parsed = JSON.parse(raw);
 
   return {
     raw,
-    analysis: normalizeResult(parsed),
+    analysis: normalizeAnalysis(parsed),
+    interviewPlan: normalizeInterviewPlan(parsed?.interviewPlan),
   };
 }
 
-async function analyzeWithClaude(prompt: string) {
+async function analyzeWithClaude(params: {
+  extractedText: string;
+  jobDescription: string;
+  mode: RecruiterMode;
+}): Promise<ModelAnalysisOutput> {
+  if (!anthropic) {
+    throw new Error("ANTHROPIC_API_KEY is missing");
+  }
+
+  const prompt = buildAnalysisPrompt(params);
+
   const response = await anthropic.messages.create({
     model: "claude-3-5-sonnet-20241022",
-    max_tokens: 1500,
+    max_tokens: 1800,
     messages: [
       {
         role: "user",
@@ -212,97 +232,75 @@ async function analyzeWithClaude(prompt: string) {
     ],
   });
 
-  const raw = response.content
-    .filter((block) => block.type === "text")
-    .map((block) => block.text)
+  const rawText = response.content
+    .map((block: any) => ("text" in block ? block.text : ""))
     .join("\n");
 
-  const parsed = await parsePossiblyBrokenJson(raw);
+  const raw = sanitizeJson(rawText || "{}");
+  const parsed = JSON.parse(raw);
 
   return {
     raw,
-    analysis: normalizeResult(parsed),
+    analysis: normalizeAnalysis(parsed),
+    interviewPlan: normalizeInterviewPlan(parsed?.interviewPlan),
   };
 }
 
-function mergeUnique(a: string[], b: string[]) {
-  return Array.from(new Set([...a, ...b]));
+function averageNumber(values: number[]) {
+  if (!values.length) return 0;
+  return Math.round(values.reduce((sum, n) => sum + n, 0) / values.length);
 }
 
-function decisionRank(decision: FinalDecision) {
-  if (decision === "Hire") return 3;
-  if (decision === "Consider") return 2;
-  return 1;
+function mergeUniqueStrings(arrays: string[][], limit = 5) {
+  return [...new Set(arrays.flat().filter(Boolean))].slice(0, limit);
 }
 
-function rankToDecision(rank: number): FinalDecision {
-  if (rank >= 3) return "Hire";
-  if (rank === 2) return "Consider";
+function chooseDecision(averageHireScore: number): "Hire" | "Consider" | "Reject" {
+  if (averageHireScore >= 75) return "Hire";
+  if (averageHireScore >= 50) return "Consider";
   return "Reject";
 }
 
-function buildConsensus(openaiResult: AnalysisResult, claudeResult: AnalysisResult) {
-  const hireScore = Math.round(
-    (openaiResult.hireScore + claudeResult.hireScore) / 2
-  );
-
-  const technicalMatch = Math.round(
-    (openaiResult.technicalMatch + claudeResult.technicalMatch) / 2
-  );
-
-  const experienceMatch = Math.round(
-    (openaiResult.experienceMatch + claudeResult.experienceMatch) / 2
-  );
-
-  const riskScore = Math.round(
-    (openaiResult.riskScore + claudeResult.riskScore) / 2
-  );
-
-  const openaiRank = decisionRank(openaiResult.finalDecision);
-  const claudeRank = decisionRank(claudeResult.finalDecision);
-
-  let aiAgreement: "High" | "Medium" | "Low";
-  let finalDecision: FinalDecision;
-
-  if (openaiResult.finalDecision === claudeResult.finalDecision) {
-    aiAgreement = "High";
-    finalDecision = openaiResult.finalDecision;
-  } else if (Math.abs(openaiRank - claudeRank) === 1) {
-    aiAgreement = "Medium";
-    finalDecision = rankToDecision(Math.round((openaiRank + claudeRank) / 2));
-  } else {
-    aiAgreement = "Low";
-    finalDecision = hireScore >= 70 ? "Consider" : "Reject";
+function buildConsensusSummary(params: {
+  openaiAvailable: boolean;
+  claudeAvailable: boolean;
+  openaiAnalysis?: AnalysisResult;
+  claudeAnalysis?: AnalysisResult;
+  finalAnalysis: AnalysisResult;
+}) {
+  if (params.openaiAvailable && params.claudeAvailable) {
+    return `Both models contributed to the evaluation. Final result reflects a multi-model consensus balancing strengths, risks, and overall fit.`;
   }
 
-  return {
-    hireScore,
-    technicalMatch,
-    experienceMatch,
-    riskScore,
-    finalDecision,
-    strengths: mergeUnique(openaiResult.strengths, claudeResult.strengths),
-    risks: mergeUnique(openaiResult.risks, claudeResult.risks),
-    missingSkills: mergeUnique(
-      openaiResult.missingSkills,
-      claudeResult.missingSkills
-    ),
-    growthPotential:
-      openaiResult.growthPotential.length >= claudeResult.growthPotential.length
-        ? openaiResult.growthPotential
-        : claudeResult.growthPotential,
-    reasoning:
-      openaiResult.reasoning.length >= claudeResult.reasoning.length
-        ? openaiResult.reasoning
-        : claudeResult.reasoning,
-    aiAgreement,
-    consensusSummary:
-      aiAgreement === "High"
-        ? "OpenAI and Claude reached the same hiring direction."
-        : aiAgreement === "Medium"
-        ? "OpenAI and Claude were close, so the final result was balanced between both models."
-        : "OpenAI and Claude disagreed materially, so the final decision was made conservatively.",
-  };
+  if (params.openaiAvailable) {
+    return `Only OpenAI was available during analysis. Final result is based on a single-model fallback.`;
+  }
+
+  if (params.claudeAvailable) {
+    return `Only Claude was available during analysis. Final result is based on a single-model fallback.`;
+  }
+
+  return `No model consensus was available.`;
+}
+
+function buildAgreementLabel(params: {
+  openaiAvailable: boolean;
+  claudeAvailable: boolean;
+  openaiAnalysis?: AnalysisResult;
+  claudeAnalysis?: AnalysisResult;
+}) {
+  if (!params.openaiAvailable || !params.claudeAvailable) return "Low";
+
+  const decisionMatch =
+    params.openaiAnalysis?.finalDecision === params.claudeAnalysis?.finalDecision;
+
+  const scoreGap = Math.abs(
+    (params.openaiAnalysis?.hireScore ?? 0) - (params.claudeAnalysis?.hireScore ?? 0)
+  );
+
+  if (decisionMatch && scoreGap <= 8) return "High";
+  if (scoreGap <= 18) return "Medium";
+  return "Low";
 }
 
 export async function POST(request: Request) {
@@ -311,41 +309,32 @@ export async function POST(request: Request) {
 
     const file = formData.get("cv") as File | null;
     const jobDescription = (formData.get("jobDescription") as string) || "";
-    const mode = ((formData.get("mode") as string) ||
-      "balanced") as RecruiterMode;
+    const mode = ((formData.get("mode") as string) || "balanced") as RecruiterMode;
 
     if (!file) {
+      return NextResponse.json({ error: "CV file is required." }, { status: 400 });
+    }
+
+    if (!jobDescription.trim()) {
       return NextResponse.json(
-        { error: "No CV file uploaded." },
+        { error: "Job description is required." },
         { status: 400 }
       );
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-
-    const pdf = await getDocument({
-      data: new Uint8Array(arrayBuffer),
-      useSystemFonts: true,
-    }).promise;
-
-    let extractedText = "";
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-
-      const strings = content.items.map((item: any) =>
-        "str" in item ? item.str : ""
-      );
-
-      extractedText += strings.join(" ") + "\n";
-    }
-
-    const prompt = buildPrompt(mode, jobDescription, extractedText);
+    const extractedText = await extractPdfText(file);
 
     const [openaiSettled, claudeSettled] = await Promise.allSettled([
-      analyzeWithOpenAI(prompt),
-      analyzeWithClaude(prompt),
+      analyzeWithOpenAI({
+        extractedText,
+        jobDescription,
+        mode,
+      }),
+      analyzeWithClaude({
+        extractedText,
+        jobDescription,
+        mode,
+      }),
     ]);
 
     const openaiSuccess = openaiSettled.status === "fulfilled";
@@ -353,96 +342,78 @@ export async function POST(request: Request) {
 
     if (!openaiSuccess && !claudeSuccess) {
       return NextResponse.json(
-        {
-          error: "Both OpenAI and Claude failed.",
-          openaiError:
-            openaiSettled.status === "rejected"
-              ? String(openaiSettled.reason)
-              : null,
-          claudeError:
-            claudeSettled.status === "rejected"
-              ? String(claudeSettled.reason)
-              : null,
-        },
+        { error: "Both OpenAI and Claude analysis failed." },
         { status: 500 }
       );
     }
 
-    if (openaiSuccess && claudeSuccess) {
-      const openaiAnalysis = openaiSettled.value.analysis;
-      const claudeAnalysis = claudeSettled.value.analysis;
-      const consensus = buildConsensus(openaiAnalysis, claudeAnalysis);
+    const openaiResult = openaiSuccess ? openaiSettled.value : null;
+    const claudeResult = claudeSuccess ? claudeSettled.value : null;
 
-      return NextResponse.json({
-        fileName: file.name,
-        extractedText,
-        jobDescription,
-        mode,
+    const analyses = [openaiResult?.analysis, claudeResult?.analysis].filter(
+      Boolean
+    ) as AnalysisResult[];
 
-        hireScore: consensus.hireScore,
-        finalDecision: consensus.finalDecision,
-        technicalMatch: consensus.technicalMatch,
-        experienceMatch: consensus.experienceMatch,
-        riskScore: consensus.riskScore,
+    const interviewPlan =
+      openaiResult?.interviewPlan || claudeResult?.interviewPlan || null;
 
-        strengths: consensus.strengths,
-        risks: consensus.risks,
-        missingSkills: consensus.missingSkills,
-        growthPotential: consensus.growthPotential,
-        reasoning: consensus.reasoning,
-
-        openaiAnalysis,
-        claudeAnalysis,
-        aiAgreement: consensus.aiAgreement,
-        consensusSummary: consensus.consensusSummary,
-
-        sources: {
-          openai: true,
-          claude: true,
-        },
-      });
-    }
-
-    const fallbackAnalysis = openaiSuccess
-      ? openaiSettled.value.analysis
-      : claudeSettled.value.analysis;
+    const finalAnalysis: AnalysisResult = analyses.length === 1
+      ? analyses[0]
+      : {
+          hireScore: averageNumber(analyses.map((a) => a.hireScore)),
+          finalDecision: chooseDecision(
+            averageNumber(analyses.map((a) => a.hireScore))
+          ),
+          technicalMatch: averageNumber(analyses.map((a) => a.technicalMatch)),
+          experienceMatch: averageNumber(analyses.map((a) => a.experienceMatch)),
+          riskScore: averageNumber(analyses.map((a) => a.riskScore)),
+          strengths: mergeUniqueStrings(analyses.map((a) => a.strengths), 5),
+          risks: mergeUniqueStrings(analyses.map((a) => a.risks), 5),
+          missingSkills: mergeUniqueStrings(analyses.map((a) => a.missingSkills), 5),
+          growthPotential:
+            analyses.map((a) => a.growthPotential).filter(Boolean).join(" ") ||
+            "",
+          reasoning:
+            analyses.map((a) => a.reasoning).filter(Boolean).join(" ") || "",
+        };
 
     return NextResponse.json({
       fileName: file.name,
-      extractedText,
-      jobDescription,
       mode,
-
-      hireScore: fallbackAnalysis.hireScore,
-      finalDecision: fallbackAnalysis.finalDecision,
-      technicalMatch: fallbackAnalysis.technicalMatch,
-      experienceMatch: fallbackAnalysis.experienceMatch,
-      riskScore: fallbackAnalysis.riskScore,
-
-      strengths: fallbackAnalysis.strengths,
-      risks: fallbackAnalysis.risks,
-      missingSkills: fallbackAnalysis.missingSkills,
-      growthPotential: fallbackAnalysis.growthPotential,
-      reasoning: fallbackAnalysis.reasoning,
-
-      openaiAnalysis: openaiSuccess ? openaiSettled.value.analysis : null,
-      claudeAnalysis: claudeSuccess ? claudeSettled.value.analysis : null,
-      aiAgreement: "Low",
-      consensusSummary:
-        "Only one model was available, so the result is based on a single-model fallback.",
-
+      hireScore: finalAnalysis.hireScore,
+      finalDecision: finalAnalysis.finalDecision,
+      technicalMatch: finalAnalysis.technicalMatch,
+      experienceMatch: finalAnalysis.experienceMatch,
+      riskScore: finalAnalysis.riskScore,
+      strengths: finalAnalysis.strengths,
+      risks: finalAnalysis.risks,
+      missingSkills: finalAnalysis.missingSkills,
+      growthPotential: finalAnalysis.growthPotential,
+      reasoning: finalAnalysis.reasoning,
+      aiAgreement: buildAgreementLabel({
+        openaiAvailable: openaiSuccess,
+        claudeAvailable: claudeSuccess,
+        openaiAnalysis: openaiResult?.analysis,
+        claudeAnalysis: claudeResult?.analysis,
+      }),
+      consensusSummary: buildConsensusSummary({
+        openaiAvailable: openaiSuccess,
+        claudeAvailable: claudeSuccess,
+        openaiAnalysis: openaiResult?.analysis,
+        claudeAnalysis: claudeResult?.analysis,
+        finalAnalysis,
+      }),
       sources: {
         openai: openaiSuccess,
         claude: claudeSuccess,
       },
+      interviewPlan,
     });
   } catch (error: any) {
-    console.error("Analyze error:", error);
+    console.error("Analyze route error:", error);
 
     return NextResponse.json(
-      {
-        error: error?.message || "AI analysis failed",
-      },
+      { error: error?.message || "Analysis failed." },
       { status: 500 }
     );
   }

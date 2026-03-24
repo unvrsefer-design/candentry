@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -31,8 +32,17 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-        <Link href="/upload" className="text-lg font-semibold text-white">
-          Candentry
+        <Link href="/upload" className="flex items-center gap-3">
+          <Image
+            src="/logo.png"
+            alt="Candentry"
+            width={36}
+            height={36}
+            className="rounded-md"
+          />
+          <span className="text-lg font-semibold tracking-tight text-white">
+            Candentry
+          </span>
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">

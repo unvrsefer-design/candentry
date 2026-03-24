@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   getCandidateById,
@@ -39,7 +39,7 @@ const modeLabels: Record<RecruiterMode, string> = {
   candidateFriendly: "Candidate-Friendly",
 };
 
-export default function ComparePage() {
+function ComparePageContent() {
   const searchParams = useSearchParams();
 
   const [selectedCandidates, setSelectedCandidates] = useState<SavedCandidate[]>(
@@ -84,7 +84,9 @@ export default function ComparePage() {
     setSaveState("idle");
 
     if (selectedCandidates.length < 2) {
-      setLocalError("Please select at least 2 saved candidates from the dashboard.");
+      setLocalError(
+        "Please select at least 2 saved candidates from the dashboard."
+      );
       return;
     }
 
@@ -228,8 +230,8 @@ export default function ComparePage() {
 
             {selectedCandidates.length === 0 ? (
               <p className="mt-4 text-slate-400">
-                No candidates selected. Go to the dashboard and select at least 2
-                candidates.
+                No candidates selected. Go to the dashboard and select at least
+                2 candidates.
               </p>
             ) : (
               <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -249,7 +251,10 @@ export default function ComparePage() {
                       <p>Experience Match: {candidate.experienceMatch}/100</p>
                       <p>Risk Score: {candidate.riskScore}/100</p>
                       <p className="pt-1">
-                        Status: <span className="text-slate-300">{candidate.status}</span>
+                        Status:{" "}
+                        <span className="text-slate-300">
+                          {candidate.status}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -387,7 +392,9 @@ export default function ComparePage() {
                         ))}
                       </ul>
 
-                      <h3 className="mt-8 text-2xl font-semibold">Why Others Lose</h3>
+                      <h3 className="mt-8 text-2xl font-semibold">
+                        Why Others Lose
+                      </h3>
                       <ul className="mt-4 list-disc space-y-2 pl-5 text-slate-300">
                         {result.comparison.whyLoser?.map((item, i) => (
                           <li key={i}>{item}</li>
@@ -409,5 +416,27 @@ export default function ComparePage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-950 px-6 py-16 text-white">
+          <div className="mx-auto max-w-7xl rounded-2xl border border-slate-800 bg-slate-900 p-8">
+            <p className="text-sm uppercase tracking-[0.2em] text-cyan-300">
+              Candentry Compare
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold sm:text-5xl">
+              Compare Candidates
+            </h1>
+            <p className="mt-4 text-slate-300">Loading compare page...</p>
+          </div>
+        </main>
+      }
+    >
+      <ComparePageContent />
+    </Suspense>
   );
 }

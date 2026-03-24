@@ -1,29 +1,41 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { AUTH_COOKIE_NAME, isValidAuthCookie } from "./lib/auth";
+
+const PUBLIC_PATHS = [
+  "/login",
+  "/api/login",
+  "/api/logout",
+  "/favicon.ico",
+  "/icon.png",
+  "/logo.png",
+];
+
+function isPublicPath(pathname: string) {
+  if (PUBLIC_PATHS.includes(pathname)) return true;
+  if (pathname.startsWith("/_next")) return true;
+  if (pathname.startsWith("/images")) return true;
+  if (pathname.startsWith("/public")) return true;
+  return false;
+}
 
 export function middleware(req: NextRequest) {
-  const auth = req.headers.get("authorization");
+  const { pathname } = req.nextUrl;
 
-  const USERNAME = "demo";
-  const PASSWORD = "candentry123";
-
-  if (auth) {
-    const base64 = auth.split(" ")[1];
-    const [user, pass] = atob(base64).split(":");
-
-    if (user === USERNAME && pass === PASSWORD) {
-      return NextResponse.next();
-    }
+  if (isPublicPath(pathname)) {
+    return NextResponse.next();
   }
 
-  return new NextResponse("Authentication required", {
-    status: 401,
-    headers: {
-      "WWW-Authenticate": 'Basic realm="Secure Area"',
-    },
-  });
+  const authCookie = req.cookies.get(AUTH_COOKIE_NAME)?.value;
+
+  if (isValidAuthCookie(authCookie)) {
+    return NextResponse.next();
+  }
+
+  const loginUrl = new URL("/login", req.url);
+  loginUrl.searchParams.set("next", pathname);
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"],
+  matcher: ["/((?!.*\\..*).*)"],
 };

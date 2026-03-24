@@ -281,7 +281,7 @@ export default function ResultPage() {
   }
 
   async function downloadPDF(result: ResultData) {
-    const { jsPDF } = await import("jspdf/dist/jspdf.umd.min.js");
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF();
 
     const pageHeight = doc.internal.pageSize.getHeight();

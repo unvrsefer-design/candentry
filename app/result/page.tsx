@@ -185,12 +185,12 @@ async function downloadPDF(result: ResultData) {
   }
 
   const bytes = await pdfDoc.save();
-const arrayBuffer = bytes.buffer.slice(
-  bytes.byteOffset,
-  bytes.byteOffset + bytes.byteLength
+  const arrayBuffer = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength
 ) as ArrayBuffer;
 
-const blob = new Blob([arrayBuffer], { type: "application/pdf" });
+  const blob = new Blob([arrayBuffer], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -256,25 +256,29 @@ export default function ResultPage() {
   }
 
   function handleSaveCandidate() {
-    const id = `${data.fileName}-${Date.now()}-${Math.random()
+    if (!data) return;
+
+    const currentData = data;
+
+    const id = `${currentData.fileName}-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 8)}`;
 
     saveCandidate({
       id,
       savedAt: new Date().toISOString(),
-      fileName: data.fileName,
-      mode: data.mode || "balanced",
-      hireScore: data.hireScore,
-      finalDecision: data.finalDecision,
-      technicalMatch: data.technicalMatch,
-      experienceMatch: data.experienceMatch,
-      riskScore: data.riskScore,
-      strengths: data.strengths || [],
-      risks: data.risks || [],
-      missingSkills: data.missingSkills || [],
-      growthPotential: data.growthPotential || "",
-      reasoning: data.reasoning || "",
+      fileName: currentData.fileName,
+      mode: currentData.mode || "balanced",
+      hireScore: currentData.hireScore,
+      finalDecision: currentData.finalDecision,
+      technicalMatch: currentData.technicalMatch,
+      experienceMatch: currentData.experienceMatch,
+      riskScore: currentData.riskScore,
+      strengths: currentData.strengths || [],
+      risks: currentData.risks || [],
+      missingSkills: currentData.missingSkills || [],
+      growthPotential: currentData.growthPotential || "",
+      reasoning: currentData.reasoning || "",
       shortlist: false,
       status: "New",
       notes: "",

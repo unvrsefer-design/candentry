@@ -42,7 +42,7 @@ export default function Navbar() {
             alt="Candentry logo"
             width={64}
             height={64}
-            className="h-12 w-auto object-contain"
+            className="h-14 w-auto object-contain"
             priority
           />
         </Link>

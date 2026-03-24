@@ -4,6 +4,9 @@ import Navbar from "../components/Navbar";
 export const metadata = {
   title: "Candentry",
   description: "AI-powered candidate evaluation",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

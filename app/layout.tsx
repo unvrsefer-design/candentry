@@ -5,7 +5,12 @@ export const metadata = {
   title: "Candentry",
   description: "AI-powered candidate evaluation",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/icon.png",
   },
 };
 

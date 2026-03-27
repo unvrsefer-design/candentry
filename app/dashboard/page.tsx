@@ -13,6 +13,13 @@ import {
   type CandidateStatus,
   type SavedCandidate,
 } from "@/lib/candidate-store";
+import {
+  getRoles,
+  getRoleById,
+  saveRole,
+  seedDemoRoles,
+  type Role,
+} from "@/lib/role-store";
 import { encodeShareData } from "@/lib/share-report";
 
 const columns: CandidateStatus[] = ["New", "Review", "Interview", "Rejected"];
@@ -34,6 +41,7 @@ function getColumnStyle(status: CandidateStatus) {
 
 export default function DashboardPage() {
   const [candidates, setCandidates] = useState<SavedCandidate[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [draftNotes, setDraftNotes] = useState<Record<string, string>>({});
   const [draggedCandidateId, setDraggedCandidateId] = useState<string | null>(
@@ -48,10 +56,15 @@ export default function DashboardPage() {
     useState<(typeof decisionOptions)[number]>("All");
   const [sourceFilter, setSourceFilter] =
     useState<(typeof sourceOptions)[number]>("All");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+
+  const [newRoleTitle, setNewRoleTitle] = useState("");
+  const [newRoleDescription, setNewRoleDescription] = useState("");
 
   function refresh() {
     const data = getSavedCandidates();
     setCandidates(data);
+    setRoles(getRoles());
 
     const notes: Record<string, string> = {};
     data.forEach((candidate) => {
@@ -62,6 +75,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     seedLinkedInCandidates();
+    seedDemoRoles();
     refresh();
   }, []);
 
@@ -91,11 +105,15 @@ export default function DashboardPage() {
       const matchesSource =
         sourceFilter === "All" || candidate.source === sourceFilter;
 
+      const matchesRole =
+        roleFilter === "all" || candidate.roleId === roleFilter;
+
       return (
         matchesSearch &&
         matchesShortlist &&
         matchesDecision &&
-        matchesSource
+        matchesSource &&
+        matchesRole
       );
     });
   }, [
@@ -104,6 +122,7 @@ export default function DashboardPage() {
     shortlistOnly,
     decisionFilter,
     sourceFilter,
+    roleFilter,
   ]);
 
   function toggleSelect(id: string) {
@@ -196,6 +215,23 @@ export default function DashboardPage() {
     refresh();
   }
 
+  function handleCreateRole() {
+    if (!newRoleTitle.trim()) {
+      alert("Please enter a role title.");
+      return;
+    }
+
+    saveRole(newRoleTitle, newRoleDescription);
+    setNewRoleTitle("");
+    setNewRoleDescription("");
+    refresh();
+  }
+
+  function getCandidateRoleName(candidate: SavedCandidate) {
+    if (!candidate.roleId) return "Unassigned";
+    return getRoleById(candidate.roleId)?.title || "Unknown Role";
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-7xl">
@@ -213,7 +249,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4">
               <p className="text-sm text-slate-400">Total Candidates</p>
               <p className="mt-2 text-2xl font-semibold text-cyan-300">
@@ -228,7 +264,14 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="col-span-2 rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4 sm:col-span-1">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4">
+              <p className="text-sm text-slate-400">Roles</p>
+              <p className="mt-2 text-2xl font-semibold text-violet-300">
+                {roles.length}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4">
               <p className="text-sm text-slate-400">Selected for Compare</p>
               <p className="mt-2 text-2xl font-semibold text-white">
                 {selectedIds.length}
@@ -238,7 +281,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-sm font-medium text-cyan-300">
                 Candidate Sources
@@ -282,7 +325,61 @@ export default function DashboardPage() {
         </div>
 
         <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div className="grid gap-4 lg:grid-cols-4">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+              <h2 className="text-lg font-semibold">Create Role</h2>
+              <div className="mt-4 space-y-4">
+                <input
+                  type="text"
+                  value={newRoleTitle}
+                  onChange={(e) => setNewRoleTitle(e.target.value)}
+                  placeholder="Role title (e.g. Senior Frontend Developer)"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                />
+
+                <textarea
+                  value={newRoleDescription}
+                  onChange={(e) => setNewRoleDescription(e.target.value)}
+                  placeholder="Short role description..."
+                  className="min-h-[120px] w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                />
+
+                <button
+                  onClick={handleCreateRole}
+                  className="rounded-xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-cyan-400"
+                >
+                  Create Role
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+              <h2 className="text-lg font-semibold">Active Roles</h2>
+              {roles.length === 0 ? (
+                <p className="mt-4 text-sm text-slate-400">
+                  No roles created yet.
+                </p>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {roles.map((role) => (
+                    <div
+                      key={role.id}
+                      className="rounded-xl border border-slate-800 bg-slate-900 p-4"
+                    >
+                      <p className="font-medium text-white">{role.title}</p>
+                      <p className="mt-1 text-sm text-slate-400">
+                        {role.description || "No description added."}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <div className="grid gap-4 lg:grid-cols-5">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
                 Search
@@ -337,6 +434,24 @@ export default function DashboardPage() {
               </select>
             </div>
 
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Role Filter
+              </label>
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none"
+              >
+                <option value="all">All Roles</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex items-end">
               <label className="flex w-full items-center gap-3 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-300">
                 <input
@@ -345,7 +460,7 @@ export default function DashboardPage() {
                   onChange={(e) => setShortlistOnly(e.target.checked)}
                   className="h-4 w-4 accent-cyan-400"
                 />
-                Show shortlisted candidates only
+                Show shortlisted only
               </label>
             </div>
           </div>
@@ -449,6 +564,12 @@ export default function DashboardPage() {
                               Source:{" "}
                               <span className="capitalize text-cyan-300">
                                 {candidate.source}
+                              </span>
+                            </p>
+                            <p>
+                              Role:{" "}
+                              <span className="text-violet-300">
+                                {getCandidateRoleName(candidate)}
                               </span>
                             </p>
                             {candidate.shortlist && (

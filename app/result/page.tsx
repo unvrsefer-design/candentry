@@ -255,38 +255,39 @@ export default function ResultPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function handleSaveCandidate() {
-    if (!data) return;
+function handleSaveCandidate() {
+  if (!data) return;
 
-    const currentData = data;
+  const currentData = data;
 
-    const id = `${currentData.fileName}-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2, 8)}`;
+  const id = `${currentData.fileName}-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
 
-    saveCandidate({
-      id,
-      savedAt: new Date().toISOString(),
-      fileName: currentData.fileName,
-      mode: currentData.mode || "balanced",
-      hireScore: currentData.hireScore,
-      finalDecision: currentData.finalDecision,
-      technicalMatch: currentData.technicalMatch,
-      experienceMatch: currentData.experienceMatch,
-      riskScore: currentData.riskScore,
-      strengths: currentData.strengths || [],
-      risks: currentData.risks || [],
-      missingSkills: currentData.missingSkills || [],
-      growthPotential: currentData.growthPotential || "",
-      reasoning: currentData.reasoning || "",
-      shortlist: false,
-      status: "New",
-      notes: "",
-    });
+  saveCandidate({
+    id,
+    savedAt: new Date().toISOString(),
+    fileName: currentData.fileName,
+    mode: currentData.mode || "balanced",
+    hireScore: currentData.hireScore,
+    finalDecision: currentData.finalDecision,
+    technicalMatch: currentData.technicalMatch,
+    experienceMatch: currentData.experienceMatch,
+    riskScore: currentData.riskScore,
+    strengths: currentData.strengths || [],
+    risks: currentData.risks || [],
+    missingSkills: currentData.missingSkills || [],
+    growthPotential: currentData.growthPotential || "",
+    reasoning: currentData.reasoning || "",
+    shortlist: false,
+    status: "New",
+    notes: "",
+    source: "upload",
+  });
 
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }
+  setSaved(true);
+  setTimeout(() => setSaved(false), 2000);
+}
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-16 text-white">

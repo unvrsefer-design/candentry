@@ -30,10 +30,6 @@ function NavLink({
 
 export default function Navbar() {
   const router = useRouter();
-
-  async function handleLogout() {
-    await fetch("/api/logout", { method: "POST" });
-    router.push("/login");
     router.refresh();
   }
 
@@ -61,13 +57,6 @@ export default function Navbar() {
           <NavLink href="/dashboard" label="Dashboard" />
           <NavLink href="/compare" label="Compare" />
           <NavLink href="/compare-history" label="Compare History" />
-
-          <button
-            onClick={handleLogout}
-            className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-300 transition hover:border-red-400 hover:text-red-200"
-          >
-            Logout
-          </button>
         </div>
       </div>
     </nav>

@@ -1,36 +1,41 @@
-export type CandidateStatus = "New" | "Review" | "Interview" | "Rejected";
-
 export type SavedCandidate = {
   id: string;
   savedAt: string;
   fileName: string;
-  mode: "strict" | "balanced" | "growth" | "candidateFriendly";
+  mode: string;
+
   hireScore: number;
-  finalDecision: "Hire" | "Consider" | "Reject";
+  finalDecision: string;
+
   technicalMatch: number;
   experienceMatch: number;
   riskScore: number;
+
   strengths: string[];
   risks: string[];
   missingSkills: string[];
+
   growthPotential: string;
   reasoning: string;
+
   shortlist: boolean;
-  status: CandidateStatus;
-  notes?: string;
+  status: string;
+  notes: string;
+
+  // 🔥 YENİ EKLEDİĞİMİZ ALAN
+  source: "upload" | "linkedin" | "referral";
 };
 
-const STORAGE_KEY = "candentry-saved-candidates";
+const STORAGE_KEY = "candentry_candidates";
 
-export function getSavedCandidates(): SavedCandidate[] {
+export function getCandidates(): SavedCandidate[] {
   if (typeof window === "undefined") return [];
 
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return [];
 
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+  try {
+    return JSON.parse(raw);
   } catch {
     return [];
   }
@@ -39,42 +44,79 @@ export function getSavedCandidates(): SavedCandidate[] {
 export function saveCandidate(candidate: SavedCandidate) {
   if (typeof window === "undefined") return;
 
-  const all = getSavedCandidates();
-  const exists = all.some((item) => item.id === candidate.id);
+  const existing = getCandidates();
 
-  const updated = exists
-    ? all.map((item) => (item.id === candidate.id ? candidate : item))
-    : [candidate, ...all];
+  const updated = [candidate, ...existing];
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 }
 
-export function removeCandidate(id: string) {
+export function clearCandidates() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+export function seedLinkedInCandidates() {
   if (typeof window === "undefined") return;
 
-  const all = getSavedCandidates();
-  const updated = all.filter((item) => item.id !== id);
+  const existing = getCandidates();
+  if (existing.length > 0) return;
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-}
+  const dummy: SavedCandidate[] = [
+    {
+      id: "ln-1",
+      savedAt: new Date().toISOString(),
+      fileName: "Senior Frontend Developer",
+      mode: "standard",
 
-export function updateCandidate(
-  id: string,
-  updates: Partial<SavedCandidate>
-) {
-  if (typeof window === "undefined") return;
+      hireScore: 87,
+      finalDecision: "Hire",
 
-  const all = getSavedCandidates();
-  const updated = all.map((item) =>
-    item.id === id ? { ...item, ...updates } : item
-  );
+      technicalMatch: 90,
+      experienceMatch: 85,
+      riskScore: 20,
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-}
+      strengths: ["React", "Next.js", "System Design"],
+      risks: ["Limited startup experience"],
+      missingSkills: [],
 
-export function getCandidateById(id: string): SavedCandidate | null {
-  if (typeof window === "undefined") return null;
+      growthPotential: "High",
+      reasoning: "Strong frontend background with solid architecture knowledge",
 
-  const all = getSavedCandidates();
-  return all.find((item) => item.id === id) || null;
+      shortlist: false,
+      status: "New",
+      notes: "",
+
+      source: "linkedin",
+    },
+
+    {
+      id: "ln-2",
+      savedAt: new Date().toISOString(),
+      fileName: "Product Manager",
+      mode: "standard",
+
+      hireScore: 78,
+      finalDecision: "Consider",
+
+      technicalMatch: 70,
+      experienceMatch: 82,
+      riskScore: 30,
+
+      strengths: ["Stakeholder management", "Roadmapping"],
+      risks: ["Limited technical depth"],
+      missingSkills: ["Data analysis"],
+
+      growthPotential: "Medium",
+      reasoning: "Good product sense but lacks strong data background",
+
+      shortlist: false,
+      status: "New",
+      notes: "",
+
+      source: "linkedin",
+    },
+  ];
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(dummy));
 }

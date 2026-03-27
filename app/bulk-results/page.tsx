@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveCandidate } from "@/lib/candidate-store";
-
-type RecruiterMode = "strict" | "balanced" | "lenient";
+import {
+  saveCandidate,
+  type RecruiterMode,
+} from "@/lib/candidate-store";
 
 type CandidateResult = {
   fileName: string;
@@ -35,14 +36,19 @@ export default function BulkResultsPage() {
     }
 
     setResults(JSON.parse(stored));
-    if (storedMode) {
-      setMode(storedMode as RecruiterMode);
+
+    if (
+      storedMode === "strict" ||
+      storedMode === "balanced" ||
+      storedMode === "growth" ||
+      storedMode === "candidateFriendly"
+    ) {
+      setMode(storedMode);
     }
   }, [router]);
 
   const handleSaveAll = () => {
     results.forEach((candidate) => {
-      // ✅ FIXED ID GENERATION
       const id = `${candidate.fileName}-${Date.now()}-${Math.random()
         .toString(36)
         .slice(2, 8)}`;
@@ -52,24 +58,19 @@ export default function BulkResultsPage() {
         savedAt: new Date().toISOString(),
         fileName: candidate.fileName,
         mode,
-
         hireScore: candidate.hireScore,
         finalDecision: candidate.finalDecision,
         technicalMatch: candidate.technicalMatch,
         experienceMatch: candidate.experienceMatch,
         riskScore: candidate.riskScore,
-
         strengths: candidate.strengths || [],
         risks: candidate.risks || [],
         missingSkills: candidate.missingSkills || [],
         growthPotential: candidate.growthPotential || "",
         reasoning: candidate.summary || "",
-
         shortlist: false,
         status: "New",
         notes: "",
-
-        // ✅ REQUIRED FIELD
         source: "upload",
       });
     });
@@ -99,9 +100,7 @@ export default function BulkResultsPage() {
             className="rounded-xl border border-slate-800 bg-slate-900 p-4"
           >
             <div className="mb-2 flex justify-between">
-              <h2 className="font-medium text-white">
-                {candidate.fileName}
-              </h2>
+              <h2 className="font-medium text-white">{candidate.fileName}</h2>
               <span className="text-sm text-cyan-400">
                 {candidate.hireScore}
               </span>

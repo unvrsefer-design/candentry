@@ -8,11 +8,17 @@ export type CandidateStatus =
   | "Shortlisted"
   | "Rejected";
 
+export type RecruiterMode =
+  | "strict"
+  | "balanced"
+  | "growth"
+  | "candidateFriendly";
+
 export type SavedCandidate = {
   id: string;
   savedAt: string;
   fileName: string;
-  mode: string;
+  mode: RecruiterMode;
 
   hireScore: number;
   finalDecision: string;

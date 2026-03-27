@@ -247,7 +247,7 @@ export function loadDemoCandidatePool() {
     (candidate) => candidate.id === "ln-1" || candidate.id === "ln-2"
   );
 
-  const demoPool: SavedCandidate[] = [
+  const demoPool = [
     ...(hasLinkedInDemo
       ? []
       : [
@@ -255,9 +255,9 @@ export function loadDemoCandidatePool() {
             id: "ln-1",
             savedAt: new Date().toISOString(),
             fileName: "Senior Frontend Developer",
-            mode: "balanced",
+            mode: "balanced" as const,
             hireScore: 87,
-            finalDecision: "Hire",
+            finalDecision: "Hire" as const,
             technicalMatch: 90,
             experienceMatch: 85,
             riskScore: 20,
@@ -268,17 +268,17 @@ export function loadDemoCandidatePool() {
             reasoning:
               "Strong frontend background with solid architecture knowledge.",
             shortlist: false,
-            status: "New",
+            status: "New" as const,
             notes: "",
-            source: "linkedin",
+            source: "linkedin" as const,
           },
           {
             id: "ln-2",
             savedAt: new Date().toISOString(),
             fileName: "Product Manager",
-            mode: "balanced",
+            mode: "balanced" as const,
             hireScore: 78,
-            finalDecision: "Consider",
+            finalDecision: "Consider" as const,
             technicalMatch: 70,
             experienceMatch: 82,
             riskScore: 30,
@@ -288,18 +288,18 @@ export function loadDemoCandidatePool() {
             growthPotential: "Medium",
             reasoning: "Good product sense but lacks strong data background.",
             shortlist: false,
-            status: "Review",
+            status: "Review" as const,
             notes: "",
-            source: "linkedin",
+            source: "linkedin" as const,
           },
         ]),
     {
       id: makeId("ref"),
       savedAt: new Date().toISOString(),
       fileName: "Referral Candidate - Backend Engineer",
-      mode: "balanced",
+      mode: "balanced" as const,
       hireScore: 83,
-      finalDecision: "Hire",
+      finalDecision: "Hire" as const,
       technicalMatch: 88,
       experienceMatch: 80,
       riskScore: 25,
@@ -315,17 +315,17 @@ export function loadDemoCandidatePool() {
       reasoning:
         "This referral candidate is technically strong and reliable, especially for backend-heavy engineering work.",
       shortlist: false,
-      status: "Interview",
+      status: "Interview" as const,
       notes: "",
-      source: "referral",
+      source: "referral" as const,
     },
     {
       id: makeId("upload"),
       savedAt: new Date().toISOString(),
       fileName: "Uploaded CV - UX Designer",
-      mode: "balanced",
+      mode: "balanced" as const,
       hireScore: 75,
-      finalDecision: "Consider",
+      finalDecision: "Consider" as const,
       technicalMatch: 72,
       experienceMatch: 79,
       riskScore: 31,
@@ -341,11 +341,11 @@ export function loadDemoCandidatePool() {
       reasoning:
         "This uploaded candidate shows strong UX thinking and communication skills, with some room to grow in systems-level design leadership.",
       shortlist: false,
-      status: "Review",
+      status: "Review" as const,
       notes: "",
-      source: "upload",
+      source: "upload" as const,
     },
-  ];
+  ] satisfies SavedCandidate[];
 
   const all = getSavedCandidates();
   const updated = [...demoPool, ...all];

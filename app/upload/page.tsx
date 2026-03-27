@@ -81,6 +81,56 @@ export default function UploadPage() {
     }
   }
 
+  function handleTrySampleCandidate() {
+    const sampleResult = {
+      fileName: "Alex Morgan - Senior Frontend Developer.pdf",
+      mode,
+      hireScore: 88,
+      finalDecision: "Hire",
+      technicalMatch: 91,
+      experienceMatch: 85,
+      riskScore: 22,
+      strengths: [
+        "Strong React and Next.js experience",
+        "Solid system design and frontend architecture background",
+        "Demonstrated ownership of complex product features",
+      ],
+      risks: [
+        "Limited exposure to data-heavy product environments",
+        "May require ramp-up on backend collaboration workflows",
+      ],
+      missingSkills: ["Advanced analytics tooling"],
+      growthPotential:
+        "High potential to grow into a frontend lead role with mentoring responsibilities.",
+      reasoning:
+        "This candidate shows strong alignment with the role through deep frontend expertise, strong technical ownership, and relevant delivery experience. Risk level is manageable relative to the overall fit.",
+      aiAgreement: "High",
+      consensusSummary:
+        "Alex Morgan is the strongest fit overall due to a high technical match, proven frontend leadership potential, and a relatively low-risk profile for the target role.",
+      sources: {
+        openai: true,
+        claude: true,
+      },
+      interviewPlan: {
+        interviewerNote:
+          "Focus on architecture trade-offs, collaboration patterns, and how the candidate handles performance and scalability decisions.",
+        technicalQuestions: [
+          "How would you structure a large-scale Next.js application used by multiple teams?",
+          "What trade-offs do you consider when deciding between server and client rendering?",
+          "How do you debug performance bottlenecks in complex React apps?",
+        ],
+        behavioralQuestions: [
+          "Tell us about a time you disagreed with product or design on implementation direction.",
+          "Describe a project where you took ownership under ambiguity.",
+          "How do you mentor less experienced engineers?",
+        ],
+      },
+    };
+
+    sessionStorage.setItem("candentry-result", JSON.stringify(sampleResult));
+    window.location.href = "/result";
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-16 text-white">
       <div className="mx-auto max-w-5xl">
@@ -99,6 +149,27 @@ export default function UploadPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8">
+          <div className="mb-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-cyan-300">
+                  Want to try the product instantly?
+                </p>
+                <p className="mt-1 text-sm text-slate-300">
+                  Load a sample candidate and jump straight into the result
+                  screen without uploading a CV.
+                </p>
+              </div>
+
+              <button
+                onClick={handleTrySampleCandidate}
+                className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-5 py-3 text-sm font-medium text-cyan-300 transition hover:border-cyan-400 hover:bg-cyan-500/15"
+              >
+                Try Sample Candidate
+              </button>
+            </div>
+          </div>
+
           <div
             onDragOver={(e) => {
               e.preventDefault();

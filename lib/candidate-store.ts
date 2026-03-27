@@ -41,6 +41,7 @@ export type SavedCandidate = {
   notes: string;
 
   source: CandidateSource;
+  roleId?: string;
 };
 
 const STORAGE_KEY = "candentry_candidates";

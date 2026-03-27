@@ -1,5 +1,7 @@
 export type CandidateSource = "upload" | "linkedin" | "referral";
 
+export type CandidateStatus = "New" | "Reviewed" | "Shortlisted" | "Rejected";
+
 export type SavedCandidate = {
   id: string;
   savedAt: string;
@@ -21,7 +23,7 @@ export type SavedCandidate = {
   reasoning: string;
 
   shortlist: boolean;
-  status: string;
+  status: CandidateStatus;
   notes: string;
 
   source: CandidateSource;

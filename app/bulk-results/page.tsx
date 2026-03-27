@@ -42,9 +42,10 @@ export default function BulkResultsPage() {
 
   const handleSaveAll = () => {
     results.forEach((candidate) => {
-      const id = `${candidate.fileName}-${Date.now()}-${Math.random()}`
+      // ✅ FIXED ID GENERATION
+      const id = `${candidate.fileName}-${Date.now()}-${Math.random()
         .toString(36)
-        .slice(2, 8);
+        .slice(2, 8)}`;
 
       saveCandidate({
         id,
@@ -67,6 +68,8 @@ export default function BulkResultsPage() {
         shortlist: false,
         status: "New",
         notes: "",
+
+        // ✅ REQUIRED FIELD
         source: "upload",
       });
     });
@@ -96,7 +99,9 @@ export default function BulkResultsPage() {
             className="rounded-xl border border-slate-800 bg-slate-900 p-4"
           >
             <div className="mb-2 flex justify-between">
-              <h2 className="font-medium text-white">{candidate.fileName}</h2>
+              <h2 className="font-medium text-white">
+                {candidate.fileName}
+              </h2>
               <span className="text-sm text-cyan-400">
                 {candidate.hireScore}
               </span>

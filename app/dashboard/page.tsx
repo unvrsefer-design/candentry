@@ -5,6 +5,7 @@ import {
   getSavedCandidates,
   removeCandidate,
   updateCandidate,
+  seedLinkedInCandidates,
   type CandidateStatus,
   type SavedCandidate,
 } from "@/lib/candidate-store";
@@ -12,6 +13,7 @@ import { encodeShareData } from "@/lib/share-report";
 
 const columns: CandidateStatus[] = ["New", "Review", "Interview", "Rejected"];
 const decisionOptions = ["All", "Hire", "Consider", "Reject"] as const;
+const sourceOptions = ["All", "upload", "linkedin", "referral"] as const;
 
 function getDecisionColor(decision: SavedCandidate["finalDecision"]) {
   if (decision === "Hire") return "text-green-400";
@@ -40,6 +42,8 @@ export default function DashboardPage() {
   const [shortlistOnly, setShortlistOnly] = useState(false);
   const [decisionFilter, setDecisionFilter] =
     useState<(typeof decisionOptions)[number]>("All");
+  const [sourceFilter, setSourceFilter] =
+    useState<(typeof sourceOptions)[number]>("All");
 
   function refresh() {
     const data = getSavedCandidates();
@@ -53,6 +57,7 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
+    seedLinkedInCandidates();
     refresh();
   }, []);
 
@@ -77,9 +82,23 @@ export default function DashboardPage() {
         decisionFilter === "All" ||
         candidate.finalDecision === decisionFilter;
 
-      return matchesSearch && matchesShortlist && matchesDecision;
+      const matchesSource =
+        sourceFilter === "All" || candidate.source === sourceFilter;
+
+      return (
+        matchesSearch &&
+        matchesShortlist &&
+        matchesDecision &&
+        matchesSource
+      );
     });
-  }, [candidates, searchQuery, shortlistOnly, decisionFilter]);
+  }, [
+    candidates,
+    searchQuery,
+    shortlistOnly,
+    decisionFilter,
+    sourceFilter,
+  ]);
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) =>
@@ -165,11 +184,11 @@ export default function DashboardPage() {
               Candentry ATS
             </p>
             <h1 className="mt-2 text-3xl font-semibold sm:text-5xl">
-              Hiring Pipeline
+              All Candidates
             </h1>
             <p className="mt-3 max-w-2xl text-slate-300">
-              Move candidates through your hiring stages, keep recruiter notes,
-              compare selected profiles, and open saved reports.
+              Review candidates from different sources, move them through your
+              hiring pipeline, compare selected profiles, and open saved reports.
             </p>
           </div>
 
@@ -188,7 +207,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4 col-span-2 sm:col-span-1">
+            <div className="col-span-2 rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4 sm:col-span-1">
               <p className="text-sm text-slate-400">Selected for Compare</p>
               <p className="mt-2 text-2xl font-semibold text-white">
                 {selectedIds.length}
@@ -198,7 +217,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
                 Search
@@ -230,6 +249,26 @@ export default function DashboardPage() {
                     {option}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Source Filter
+              </label>
+              <select
+                value={sourceFilter}
+                onChange={(e) =>
+                  setSourceFilter(
+                    e.target.value as (typeof sourceOptions)[number]
+                  )
+                }
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none"
+              >
+                <option value="All">All Sources</option>
+                <option value="upload">Upload</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="referral">Referral</option>
               </select>
             </div>
 
@@ -341,6 +380,12 @@ export default function DashboardPage() {
                               Decision: {candidate.finalDecision}
                             </p>
                             <p>Mode: {candidate.mode}</p>
+                            <p>
+                              Source:{" "}
+                              <span className="capitalize text-cyan-300">
+                                {candidate.source}
+                              </span>
+                            </p>
                             {candidate.shortlist && (
                               <p className="text-green-300">Shortlisted</p>
                             )}

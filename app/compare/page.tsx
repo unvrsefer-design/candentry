@@ -78,6 +78,16 @@ function ComparePageContent() {
     [selectedCandidates]
   );
 
+  const getCandidateName = (index: number) =>
+    result?.candidateNames?.[index] ||
+    fallbackNames[index] ||
+    `Candidate ${index + 1}`;
+
+  const winnerName =
+    typeof result?.bestCandidateIndex === "number"
+      ? getCandidateName(result.bestCandidateIndex)
+      : "N/A";
+
   async function handleCompare() {
     setLocalError("");
     setResult(null);
@@ -182,6 +192,12 @@ function ComparePageContent() {
     window.print();
   }
 
+  const cleanedSummary = result?.summary
+    ?.replaceAll("Candidate 0", getCandidateName(0))
+    ?.replaceAll("Candidate 1", getCandidateName(1))
+    ?.replaceAll("Candidate 2", getCandidateName(2))
+    ?.replaceAll("Candidate 3", getCandidateName(3));
+
   return (
     <>
       <style jsx global>{`
@@ -200,8 +216,8 @@ function ComparePageContent() {
             left: 0;
             top: 0;
             width: 100%;
-            background: white;
-            color: black;
+            background: white !important;
+            color: black !important;
             padding: 24px;
           }
 
@@ -222,6 +238,10 @@ function ComparePageContent() {
 
           .print-text-muted {
             color: #374151 !important;
+          }
+
+          .print-accent {
+            color: #0f172a !important;
           }
         }
       `}</style>
@@ -350,19 +370,23 @@ function ComparePageContent() {
                 </>
               ) : (
                 <>
-                  <div className="mb-6 hidden print:block">
-                    <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                      Candentry Compare Report
+                  <div className="mb-8 border-b border-slate-700 pb-6 print-card print:block">
+                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                      Candentry AI Hiring Report
                     </p>
-                    <h1 className="mt-2 text-3xl font-semibold print-text-dark">
-                      Candidate Comparison Summary
+                    <h1 className="mt-2 text-3xl font-bold print-text-dark">
+                      Candidate Comparison
                     </h1>
-                    <p className="mt-2 text-sm print-text-muted">
-                      Generated on {new Date().toLocaleString()}
-                    </p>
-                    <p className="mt-1 text-sm print-text-muted">
-                      Recruiter Mode: {modeLabels[mode]}
-                    </p>
+                    <div className="mt-3 space-y-1 text-sm print-text-muted">
+                      <p>Generated: {new Date().toLocaleString()}</p>
+                      <p>Recruiter Mode: {modeLabels[mode]}</p>
+                      <p>
+                        Compared Candidates:{" "}
+                        {result.candidateNames?.length
+                          ? result.candidateNames.join(" vs ")
+                          : fallbackNames.join(" vs ")}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between print-hidden">
@@ -393,12 +417,12 @@ function ComparePageContent() {
                     <p className="text-sm text-slate-400 print-text-muted">
                       Winner
                     </p>
-                    <p className="mt-2 text-4xl font-semibold text-cyan-300 print-text-dark">
-                      {typeof result.bestCandidateIndex === "number"
-                        ? result.candidateNames?.[result.bestCandidateIndex] ||
-                          fallbackNames[result.bestCandidateIndex] ||
-                          `Candidate ${result.bestCandidateIndex + 1}`
-                        : "N/A"}
+                    <p className="mt-2 text-3xl font-bold text-cyan-300 print-text-dark">
+                      {winnerName}
+                    </p>
+                    <p className="mt-2 text-base print-text-muted">
+                      Top candidate based on overall score, technical match, and
+                      risk profile.
                     </p>
                   </div>
 
@@ -410,13 +434,11 @@ function ComparePageContent() {
                           className="rounded-xl border border-slate-800 bg-slate-950 p-6 print-card"
                         >
                           <h3 className="text-2xl font-semibold print-text-dark">
-                            {result.candidateNames?.[index] ||
-                              fallbackNames[index] ||
-                              `Candidate ${index + 1}`}
+                            {getCandidateName(index)}
                           </h3>
 
-                          <p className="mt-4 text-4xl font-semibold text-cyan-300 print-text-dark">
-                            {candidate.score}/100
+                          <p className="mt-4 text-3xl font-bold text-cyan-300 print-text-dark">
+                            Score: {candidate.score}/100
                           </p>
 
                           <div className="mt-6">
@@ -493,8 +515,15 @@ function ComparePageContent() {
                       Summary
                     </h3>
                     <p className="mt-4 leading-8 text-slate-300 print-text-muted">
-                      {result.summary}
+                      {cleanedSummary}
                     </p>
+                  </div>
+
+                  <div className="mt-10 hidden text-center print:block">
+                    <p className="text-sm print-text-muted">
+                      Generated by Candentry AI
+                    </p>
+                    <p className="text-xs text-slate-500">candentry.com</p>
                   </div>
                 </>
               )}

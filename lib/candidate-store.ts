@@ -1,6 +1,12 @@
 export type CandidateSource = "upload" | "linkedin" | "referral";
 
-export type CandidateStatus = "New" | "Reviewed" | "Shortlisted" | "Rejected";
+export type CandidateStatus =
+  | "New"
+  | "Review"
+  | "Reviewed"
+  | "Interview"
+  | "Shortlisted"
+  | "Rejected";
 
 export type SavedCandidate = {
   id: string;
@@ -102,26 +108,20 @@ export function seedLinkedInCandidates() {
       savedAt: new Date().toISOString(),
       fileName: "Senior Frontend Developer",
       mode: "balanced",
-
       hireScore: 87,
       finalDecision: "Hire",
-
       technicalMatch: 90,
       experienceMatch: 85,
       riskScore: 20,
-
       strengths: ["React", "Next.js", "System Design"],
       risks: ["Limited startup experience"],
       missingSkills: [],
-
       growthPotential: "High",
       reasoning:
         "Strong frontend background with solid architecture knowledge.",
-
       shortlist: false,
       status: "New",
       notes: "",
-
       source: "linkedin",
     },
     {
@@ -129,25 +129,19 @@ export function seedLinkedInCandidates() {
       savedAt: new Date().toISOString(),
       fileName: "Product Manager",
       mode: "balanced",
-
       hireScore: 78,
       finalDecision: "Consider",
-
       technicalMatch: 70,
       experienceMatch: 82,
       riskScore: 30,
-
       strengths: ["Stakeholder management", "Roadmapping"],
       risks: ["Limited technical depth"],
       missingSkills: ["Data analysis"],
-
       growthPotential: "Medium",
       reasoning: "Good product sense but lacks strong data background.",
-
       shortlist: false,
-      status: "New",
+      status: "Review",
       notes: "",
-
       source: "linkedin",
     },
   ];

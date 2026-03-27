@@ -1,3 +1,5 @@
+export type CandidateSource = "upload" | "linkedin" | "referral";
+
 export type SavedCandidate = {
   id: string;
   savedAt: string;
@@ -22,32 +24,33 @@ export type SavedCandidate = {
   status: string;
   notes: string;
 
-  // 🔥 YENİ EKLEDİĞİMİZ ALAN
-  source: "upload" | "linkedin" | "referral";
+  source: CandidateSource;
 };
 
 const STORAGE_KEY = "candentry_candidates";
 
-export function getCandidates(): SavedCandidate[] {
+export function getSavedCandidates(): SavedCandidate[] {
   if (typeof window === "undefined") return [];
 
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return [];
 
   try {
-    return JSON.parse(raw);
+    return JSON.parse(raw) as SavedCandidate[];
   } catch {
     return [];
   }
 }
 
+export function getCandidates(): SavedCandidate[] {
+  return getSavedCandidates();
+}
+
 export function saveCandidate(candidate: SavedCandidate) {
   if (typeof window === "undefined") return;
 
-  const existing = getCandidates();
-
-  const updated = [candidate, ...existing];
-
+  const all = getSavedCandidates();
+  const updated = [candidate, ...all];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 }
 
@@ -56,10 +59,39 @@ export function clearCandidates() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+export function removeCandidate(id: string) {
+  if (typeof window === "undefined") return;
+
+  const all = getSavedCandidates();
+  const updated = all.filter((item) => item.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+}
+
+export function updateCandidate(
+  id: string,
+  updates: Partial<SavedCandidate>
+) {
+  if (typeof window === "undefined") return;
+
+  const all = getSavedCandidates();
+  const updated = all.map((item) =>
+    item.id === id ? { ...item, ...updates } : item
+  );
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+}
+
+export function getCandidateById(id: string): SavedCandidate | null {
+  if (typeof window === "undefined") return null;
+
+  const all = getSavedCandidates();
+  return all.find((item) => item.id === id) || null;
+}
+
 export function seedLinkedInCandidates() {
   if (typeof window === "undefined") return;
 
-  const existing = getCandidates();
+  const existing = getSavedCandidates();
   if (existing.length > 0) return;
 
   const dummy: SavedCandidate[] = [
@@ -67,7 +99,7 @@ export function seedLinkedInCandidates() {
       id: "ln-1",
       savedAt: new Date().toISOString(),
       fileName: "Senior Frontend Developer",
-      mode: "standard",
+      mode: "balanced",
 
       hireScore: 87,
       finalDecision: "Hire",
@@ -81,7 +113,8 @@ export function seedLinkedInCandidates() {
       missingSkills: [],
 
       growthPotential: "High",
-      reasoning: "Strong frontend background with solid architecture knowledge",
+      reasoning:
+        "Strong frontend background with solid architecture knowledge.",
 
       shortlist: false,
       status: "New",
@@ -89,12 +122,11 @@ export function seedLinkedInCandidates() {
 
       source: "linkedin",
     },
-
     {
       id: "ln-2",
       savedAt: new Date().toISOString(),
       fileName: "Product Manager",
-      mode: "standard",
+      mode: "balanced",
 
       hireScore: 78,
       finalDecision: "Consider",
@@ -108,7 +140,7 @@ export function seedLinkedInCandidates() {
       missingSkills: ["Data analysis"],
 
       growthPotential: "Medium",
-      reasoning: "Good product sense but lacks strong data background",
+      reasoning: "Good product sense but lacks strong data background.",
 
       shortlist: false,
       status: "New",

@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import {
   saveCandidate,
   type RecruiterMode,
+  type FinalDecision,
 } from "@/lib/candidate-store";
 
 type CandidateResult = {
   fileName: string;
   hireScore: number;
-  finalDecision: string;
+  finalDecision: FinalDecision;
   technicalMatch: number;
   experienceMatch: number;
   riskScore: number;
@@ -35,7 +36,11 @@ export default function BulkResultsPage() {
       return;
     }
 
-    setResults(JSON.parse(stored));
+    try {
+      setResults(JSON.parse(stored) as CandidateResult[]);
+    } catch {
+      setResults([]);
+    }
 
     if (
       storedMode === "strict" ||

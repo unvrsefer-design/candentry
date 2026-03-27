@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 function NavLink({
   href,
@@ -29,15 +29,11 @@ function NavLink({
 }
 
 export default function Navbar() {
-  const router = useRouter();
-    router.refresh();
-  }
-
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4">
         <Link
-          href="/upload"
+          href="/"
           className="flex items-center"
           aria-label="Go to homepage"
         >

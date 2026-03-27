@@ -6,6 +6,10 @@ import {
   removeCandidate,
   updateCandidate,
   seedLinkedInCandidates,
+  addLinkedInCandidate,
+  addReferralCandidate,
+  loadDemoCandidatePool,
+  getCandidateSourceCounts,
   type CandidateStatus,
   type SavedCandidate,
 } from "@/lib/candidate-store";
@@ -65,6 +69,8 @@ export default function DashboardPage() {
     () => candidates.filter((candidate) => candidate.shortlist).length,
     [candidates]
   );
+
+  const sourceCounts = useMemo(() => getCandidateSourceCounts(), [candidates]);
 
   const filteredCandidates = useMemo(() => {
     return candidates.filter((candidate) => {
@@ -175,6 +181,21 @@ export default function DashboardPage() {
     setDragOverColumn(null);
   }
 
+  function handleAddLinkedInCandidate() {
+    addLinkedInCandidate();
+    refresh();
+  }
+
+  function handleAddReferralCandidate() {
+    addReferralCandidate();
+    refresh();
+  }
+
+  function handleLoadDemoPool() {
+    loadDemoCandidatePool();
+    refresh();
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-7xl">
@@ -196,7 +217,7 @@ export default function DashboardPage() {
             <div className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4">
               <p className="text-sm text-slate-400">Total Candidates</p>
               <p className="mt-2 text-2xl font-semibold text-cyan-300">
-                {candidates.length}
+                {sourceCounts.total}
               </p>
             </div>
 
@@ -212,6 +233,50 @@ export default function DashboardPage() {
               <p className="mt-2 text-2xl font-semibold text-white">
                 {selectedIds.length}
               </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-medium text-cyan-300">
+                Candidate Sources
+              </p>
+              <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-300">
+                <span className="rounded-full border border-slate-700 px-3 py-1">
+                  Upload: {sourceCounts.upload}
+                </span>
+                <span className="rounded-full border border-slate-700 px-3 py-1">
+                  LinkedIn: {sourceCounts.linkedin}
+                </span>
+                <span className="rounded-full border border-slate-700 px-3 py-1">
+                  Referral: {sourceCounts.referral}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleAddLinkedInCandidate}
+                className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm transition hover:border-cyan-400 hover:text-cyan-300"
+              >
+                Add LinkedIn Candidate
+              </button>
+
+              <button
+                onClick={handleAddReferralCandidate}
+                className="rounded-xl border border-violet-500/40 bg-violet-500/10 px-4 py-2 text-sm transition hover:border-violet-400 hover:text-violet-300"
+              >
+                Add Referral Candidate
+              </button>
+
+              <button
+                onClick={handleLoadDemoPool}
+                className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm transition hover:border-white hover:text-white"
+              >
+                Load Demo Pool
+              </button>
             </div>
           </div>
         </div>

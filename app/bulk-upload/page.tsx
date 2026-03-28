@@ -105,22 +105,22 @@ export default function BulkUploadPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-16 text-white">
+    <main className="min-h-screen bg-white px-6 py-16 text-slate-900">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8">
-          <p className="text-sm uppercase tracking-[0.2em] text-cyan-300">
-            Candentry Bulk Screening
+          <p className="text-sm uppercase tracking-[0.2em] text-blue-700">
+            CandEntry Bulk Screening
           </p>
           <h1 className="mt-2 text-3xl font-semibold sm:text-5xl">
             Bulk CV Upload
           </h1>
-          <p className="mt-3 max-w-3xl text-slate-300">
+          <p className="mt-3 max-w-3xl text-slate-600">
             Upload multiple CVs, apply one job description, and generate a ranked
             screening list that feeds directly into your hiring pipeline.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 shadow-sm">
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -130,8 +130,8 @@ export default function BulkUploadPage() {
             onDrop={handleDrop}
             className={`rounded-2xl border-2 border-dashed p-10 text-center transition ${
               dragActive
-                ? "border-cyan-400 bg-cyan-500/10"
-                : "border-slate-700 bg-slate-950"
+                ? "border-blue-400 bg-blue-50"
+                : "border-slate-300 bg-white"
             }`}
           >
             <input
@@ -145,48 +145,50 @@ export default function BulkUploadPage() {
 
             <label
               htmlFor="bulk-cv-upload"
-              className="cursor-pointer text-lg text-white"
+              className="cursor-pointer text-lg text-slate-900"
             >
               Click or drag & drop multiple CVs
             </label>
 
-            <p className="mt-2 text-sm text-slate-400">PDF only</p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-slate-500">PDF only</p>
+            <p className="mt-1 text-sm text-slate-400">
               Current file count: {files.length}
             </p>
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 px-5 py-4">
-              <p className="text-sm text-slate-400">Files</p>
-              <p className="mt-2 text-2xl font-semibold text-cyan-300">
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+              <p className="text-sm text-slate-500">Files</p>
+              <p className="mt-2 text-2xl font-semibold text-blue-700">
                 {files.length}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 px-5 py-4">
-              <p className="text-sm text-slate-400">Total Size</p>
-              <p className="mt-2 text-2xl font-semibold text-white">
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+              <p className="text-sm text-slate-500">Total Size</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-900">
                 {totalSizeMb} MB
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 px-5 py-4">
-              <p className="text-sm text-slate-400">Mode</p>
-              <p className="mt-2 text-lg font-semibold text-white">
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+              <p className="text-sm text-slate-500">Mode</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
                 {modeLabels[mode]}
               </p>
             </div>
           </div>
 
           {files.length > 0 && (
-            <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950 p-5">
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">Uploaded Files</h2>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Uploaded Files
+                </h2>
 
                 <button
                   onClick={clearFiles}
-                  className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1 text-sm text-red-300 transition hover:border-red-400 hover:text-red-200"
+                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-1 text-sm text-red-600 hover:bg-red-100"
                 >
                   Clear All
                 </button>
@@ -196,18 +198,20 @@ export default function BulkUploadPage() {
                 {files.map((file, index) => (
                   <div
                     key={`${file.name}-${file.size}-${index}`}
-                    className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-3"
+                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm text-white">{file.name}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="truncate text-sm text-slate-900">
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
                         {(file.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
 
                     <button
                       onClick={() => removeFile(index)}
-                      className="rounded-lg bg-red-500/10 px-3 py-1 text-sm text-red-300 hover:bg-red-500/20"
+                      className="rounded-lg bg-red-50 px-3 py-1 text-sm text-red-600 hover:bg-red-100"
                     >
                       Remove
                     </button>
@@ -218,7 +222,7 @@ export default function BulkUploadPage() {
           )}
 
           <div className="mt-6">
-            <label className="mb-3 block text-sm font-medium text-slate-300">
+            <label className="mb-3 block text-sm font-medium text-slate-700">
               Recruiter Mode
             </label>
 
@@ -237,8 +241,8 @@ export default function BulkUploadPage() {
                   onClick={() => setMode(item)}
                   className={`rounded-xl border px-4 py-3 text-sm transition ${
                     mode === item
-                      ? "border-cyan-400 bg-cyan-500/10 text-cyan-300"
-                      : "border-slate-700 text-slate-300 hover:border-cyan-400"
+                      ? "border-blue-200 bg-blue-50 text-blue-700"
+                      : "border-slate-300 text-slate-600 hover:border-blue-200"
                   }`}
                 >
                   {modeLabels[item]}
@@ -248,7 +252,7 @@ export default function BulkUploadPage() {
           </div>
 
           <div className="mt-6">
-            <label className="mb-3 block text-sm font-medium text-slate-300">
+            <label className="mb-3 block text-sm font-medium text-slate-700">
               Job Description
             </label>
 
@@ -256,14 +260,14 @@ export default function BulkUploadPage() {
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
               placeholder="Paste the job description here..."
-              className="min-h-[220px] w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-4 text-white outline-none placeholder:text-slate-500"
+              className="min-h-[220px] w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-900 outline-none placeholder:text-slate-400"
             />
           </div>
 
           <button
             onClick={handleAnalyzeBulk}
             disabled={loading}
-            className="mt-6 flex w-full items-center justify-center rounded-xl bg-cyan-500 py-3 font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-6 flex w-full items-center justify-center rounded-xl bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? "Analyzing candidates..." : "Analyze Bulk Candidates"}
           </button>

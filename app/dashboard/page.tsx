@@ -227,6 +227,13 @@ export default function DashboardPage() {
     refresh();
   }
 
+  function handleAssignRole(candidateId: string, value: string) {
+    updateCandidate(candidateId, {
+      roleId: value === "unassigned" ? undefined : value,
+    });
+    refresh();
+  }
+
   function getCandidateRoleName(candidate: SavedCandidate) {
     if (!candidate.roleId) return "Unassigned";
     return getRoleById(candidate.roleId)?.title || "Unknown Role";
@@ -575,6 +582,26 @@ export default function DashboardPage() {
                             {candidate.shortlist && (
                               <p className="text-green-300">Shortlisted</p>
                             )}
+                          </div>
+
+                          <div className="mt-4">
+                            <label className="mb-2 block text-xs font-medium text-slate-300">
+                              Assign Role
+                            </label>
+                            <select
+                              value={candidate.roleId || "unassigned"}
+                              onChange={(e) =>
+                                handleAssignRole(candidate.id, e.target.value)
+                              }
+                              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white outline-none"
+                            >
+                              <option value="unassigned">Unassigned</option>
+                              {roles.map((role) => (
+                                <option key={role.id} value={role.id}>
+                                  {role.title}
+                                </option>
+                              ))}
+                            </select>
                           </div>
 
                           <div className="mt-4 flex flex-wrap gap-2">

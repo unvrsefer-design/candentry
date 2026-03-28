@@ -11,10 +11,16 @@ function makeId() {
   return `role-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function getRoles(): Role[] {
-  if (typeof window === "undefined") return [];
+function getStorage(): Storage | null {
+  if (typeof window === "undefined") return null;
+  return window.sessionStorage;
+}
 
-  const raw = localStorage.getItem(STORAGE_KEY);
+export function getRoles(): Role[] {
+  const storage = getStorage();
+  if (!storage) return [];
+
+  const raw = storage.getItem(STORAGE_KEY);
   if (!raw) return [];
 
   try {
@@ -25,7 +31,8 @@ export function getRoles(): Role[] {
 }
 
 export function saveRole(title: string, description: string) {
-  if (typeof window === "undefined") return;
+  const storage = getStorage();
+  if (!storage) return;
 
   const trimmedTitle = title.trim();
   const trimmedDescription = description.trim();
@@ -48,7 +55,7 @@ export function saveRole(title: string, description: string) {
   };
 
   const updated = [newRole, ...roles];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  storage.setItem(STORAGE_KEY, JSON.stringify(updated));
 }
 
 export function getRoleById(id: string) {
@@ -56,35 +63,17 @@ export function getRoleById(id: string) {
   return roles.find((role) => role.id === id) || null;
 }
 
+export function clearRoles() {
+  const storage = getStorage();
+  if (!storage) return;
+  storage.removeItem(STORAGE_KEY);
+}
+
+/**
+ * Public trial mode:
+ * Do not auto-seed roles on app load.
+ * Keep roles session-only and user-created during the current session.
+ */
 export function seedDemoRoles() {
-  if (typeof window === "undefined") return;
-
-  const existing = getRoles();
-  if (existing.length > 0) return;
-
-  const demoRoles: Role[] = [
-    {
-      id: "role-frontend",
-      title: "Senior Frontend Developer",
-      description:
-        "Own frontend architecture, ship scalable React/Next.js experiences, and collaborate closely with design and product.",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "role-product",
-      title: "Product Manager",
-      description:
-        "Drive roadmap, align stakeholders, and own product execution from discovery to delivery.",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "role-growth",
-      title: "Growth Marketer",
-      description:
-        "Manage acquisition channels, optimize funnels, and scale growth experiments.",
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(demoRoles));
+  return;
 }

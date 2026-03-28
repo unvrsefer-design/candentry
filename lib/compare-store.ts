@@ -20,11 +20,17 @@ export type SavedCompareResult = {
 
 const STORAGE_KEY = "candentry-saved-compares";
 
+function getStorage(): Storage | null {
+  if (typeof window === "undefined") return null;
+  return window.sessionStorage; // 🔥 kritik değişiklik
+}
+
 export function getSavedCompareResults(): SavedCompareResult[] {
-  if (typeof window === "undefined") return [];
+  const storage = getStorage();
+  if (!storage) return [];
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return [];
 
     const parsed = JSON.parse(raw);
@@ -35,23 +41,30 @@ export function getSavedCompareResults(): SavedCompareResult[] {
 }
 
 export function saveCompareResult(compare: SavedCompareResult) {
-  if (typeof window === "undefined") return;
+  const storage = getStorage();
+  if (!storage) return;
 
   const all = getSavedCompareResults();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([compare, ...all]));
+  storage.setItem(STORAGE_KEY, JSON.stringify([compare, ...all]));
 }
 
 export function removeCompareResult(id: string) {
-  if (typeof window === "undefined") return;
+  const storage = getStorage();
+  if (!storage) return;
 
   const all = getSavedCompareResults();
   const updated = all.filter((item) => item.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  storage.setItem(STORAGE_KEY, JSON.stringify(updated));
 }
 
 export function getCompareResultById(id: string): SavedCompareResult | null {
-  if (typeof window === "undefined") return null;
-
   const all = getSavedCompareResults();
   return all.find((item) => item.id === id) || null;
+}
+
+export function clearCompareResults() {
+  const storage = getStorage();
+  if (!storage) return;
+
+  storage.removeItem(STORAGE_KEY);
 }

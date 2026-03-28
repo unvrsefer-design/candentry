@@ -9,6 +9,7 @@ const navItems = [
   { href: "/upload", label: "Upload" },
   { href: "/bulk-upload", label: "Bulk" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/compare", label: "Compare" },
   { href: "/compare-history", label: "History" },
 ];
 

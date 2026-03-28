@@ -13,7 +13,10 @@ export async function downloadElementAsPdf(
   const options = {
     margin: 0.5,
     filename: fileName,
-    image: { type: "jpeg", quality: 0.98 },
+    image: {
+      type: "jpeg" as const,
+      quality: 0.98,
+    },
     html2canvas: {
       scale: 2,
       useCORS: true,
@@ -24,7 +27,9 @@ export async function downloadElementAsPdf(
       format: "a4",
       orientation: "portrait",
     },
-    pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+    pagebreak: {
+      mode: ["avoid-all", "css", "legacy"] as const,
+    },
   };
 
   await html2pdf().set(options).from(element).save();

@@ -25,7 +25,7 @@ export async function downloadElementAsPdf(
     jsPDF: {
       unit: "in",
       format: "a4",
-      orientation: "portrait",
+      orientation: "portrait" as const, // 🔥 BURASI FIX
     },
     pagebreak: {
       mode: ["avoid-all", "css", "legacy"] as const,

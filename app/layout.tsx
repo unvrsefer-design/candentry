@@ -6,16 +6,22 @@ import Navbar from "@/components/Navbar";
 export const metadata: Metadata = {
   title: "CandEntry • AI Hiring Decision Engine",
   description: "AI-powered CV analysis and hiring decisions",
+
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.ico", sizes: "32x32", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <head>

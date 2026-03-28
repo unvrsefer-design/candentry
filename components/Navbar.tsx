@@ -17,10 +17,10 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`rounded-lg border px-4 py-2 text-sm transition ${
+      className={`rounded-lg px-4 py-2 text-sm transition ${
         active
-          ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
-          : "border-transparent text-slate-300 hover:border-slate-600 hover:text-white"
+          ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
+          : "border border-transparent text-slate-300 hover:border-slate-600 hover:text-white"
       }`}
     >
       {label}
@@ -31,20 +31,19 @@ function NavLink({
 export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-        <Link
-          href="/"
-          className="flex items-center"
-          aria-label="Go to homepage"
-        >
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
+        <Link href="/" className="flex items-center gap-3">
           <Image
             src="/logo.png"
-            alt="Candentry logo"
-            width={64}
-            height={64}
-            className="h-12 w-auto object-contain"
+            alt="CandEntry"
+            width={36}
+            height={36}
+            className="h-9 w-9 object-contain"
             priority
           />
+          <span className="text-lg font-semibold tracking-tight text-white">
+            CandEntry
+          </span>
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">

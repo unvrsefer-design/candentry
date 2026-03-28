@@ -2,15 +2,10 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 
 export const metadata = {
-  title: "Candentry",
-  description: "AI-powered candidate evaluation",
+  title: "CandEntry",
+  description: "AI-powered hiring platform",
   icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.png", type: "image/png" },
-    ],
-    shortcut: "/favicon.ico",
-    apple: "/icon.png",
+    icon: "/favicon.ico",
   },
 };
 

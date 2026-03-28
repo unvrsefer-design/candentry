@@ -1,11 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  startTrialIfNeeded,
-  isTrialExpired,
-  getTrialDaysLeft,
-} from "@/lib/trial";
+import { useMemo, useState } from "react";
 
 type RecruiterMode =
   | "strict"
@@ -26,14 +21,6 @@ export default function BulkUploadPage() {
   const [mode, setMode] = useState<RecruiterMode>("balanced");
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [trialExpired, setTrialExpired] = useState(false);
-  const [daysLeft, setDaysLeft] = useState(7);
-
-  useEffect(() => {
-    startTrialIfNeeded();
-    setTrialExpired(isTrialExpired());
-    setDaysLeft(getTrialDaysLeft());
-  }, []);
 
   function addFiles(fileList: FileList | null) {
     if (!fileList) return;
@@ -74,11 +61,6 @@ export default function BulkUploadPage() {
   }, [files]);
 
   async function handleAnalyzeBulk() {
-    if (trialExpired) {
-      alert("Trial expired. Please create an account.");
-      return;
-    }
-
     if (!files.length) {
       alert("Please add at least one PDF.");
       return;
@@ -138,19 +120,6 @@ export default function BulkUploadPage() {
           </p>
         </div>
 
-        <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-          <p className="text-sm font-medium text-blue-700">7-day public trial</p>
-          <p className="mt-1 text-sm text-slate-600">
-            Uploaded CVs and generated candidate data are session-only. They
-            disappear when the browser session ends.
-          </p>
-          <p className="mt-2 text-sm text-slate-600">
-            {trialExpired
-              ? "Trial ended. Please create an account to continue."
-              : `Trial active • ${daysLeft} day(s) left`}
-          </p>
-        </div>
-
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 shadow-sm">
           <div
             onDragOver={(e) => {
@@ -172,16 +141,11 @@ export default function BulkUploadPage() {
               multiple
               className="hidden"
               onChange={(e) => addFiles(e.target.files)}
-              disabled={trialExpired}
             />
 
             <label
               htmlFor="bulk-cv-upload"
-              className={`text-lg ${
-                trialExpired
-                  ? "cursor-not-allowed text-slate-400"
-                  : "cursor-pointer text-slate-900"
-              }`}
+              className="cursor-pointer text-lg text-slate-900"
             >
               Click or drag & drop multiple CVs
             </label>
@@ -297,20 +261,15 @@ export default function BulkUploadPage() {
               onChange={(e) => setJobDescription(e.target.value)}
               placeholder="Paste the job description here..."
               className="min-h-[220px] w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-slate-900 outline-none placeholder:text-slate-400"
-              disabled={trialExpired}
             />
           </div>
 
           <button
             onClick={handleAnalyzeBulk}
-            disabled={loading || trialExpired}
+            disabled={loading}
             className="mt-6 flex w-full items-center justify-center rounded-xl bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {trialExpired
-              ? "Trial expired — account required"
-              : loading
-              ? "Analyzing candidates..."
-              : "Analyze Bulk Candidates"}
+            {loading ? "Analyzing candidates..." : "Analyze Bulk Candidates"}
           </button>
         </div>
       </div>

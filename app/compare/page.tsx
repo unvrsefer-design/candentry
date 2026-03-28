@@ -89,7 +89,6 @@ function ComparePageContent() {
       ? getCandidateName(result.bestCandidateIndex)
       : "N/A";
 
-  // ✅ PDF DOWNLOAD FIXED
   async function handleDownloadPdf() {
     try {
       await downloadElementAsPdf(
@@ -102,14 +101,15 @@ function ComparePageContent() {
     }
   }
 
-  // ✅ COMPARE FUNCTION (DOĞRU)
   async function handleCompare() {
     setLocalError("");
     setResult(null);
     setSaveState("idle");
 
     if (selectedCandidates.length < 2) {
-      setLocalError("Select at least 2 candidates.");
+      setLocalError(
+        "Please select at least 2 saved candidates from the dashboard."
+      );
       return;
     }
 
@@ -123,19 +123,19 @@ function ComparePageContent() {
         },
         body: JSON.stringify({
           mode,
-          candidates: selectedCandidates.map((c) => ({
-            id: c.id,
-            name: c.fileName,
-            score: c.hireScore,
-            finalDecision: c.finalDecision,
-            technicalMatch: c.technicalMatch,
-            experienceMatch: c.experienceMatch,
-            riskScore: c.riskScore,
-            strengths: c.strengths,
-            risks: c.risks,
-            missingSkills: c.missingSkills,
-            growthPotential: c.growthPotential,
-            reasoning: c.reasoning,
+          candidates: selectedCandidates.map((candidate) => ({
+            id: candidate.id,
+            name: candidate.fileName,
+            score: candidate.hireScore,
+            finalDecision: candidate.finalDecision,
+            technicalMatch: candidate.technicalMatch,
+            experienceMatch: candidate.experienceMatch,
+            riskScore: candidate.riskScore,
+            strengths: candidate.strengths,
+            risks: candidate.risks,
+            missingSkills: candidate.missingSkills,
+            growthPotential: candidate.growthPotential,
+            reasoning: candidate.reasoning,
           })),
         }),
       });
@@ -143,70 +143,346 @@ function ComparePageContent() {
       const data = await response.json();
 
       if (!response.ok) {
-        setResult({ error: data.error || "Compare failed." });
+        setResult({
+          error: data.error || "Compare failed.",
+        });
         return;
       }
 
       setResult(data);
     } catch (error) {
-      console.error(error);
-      setResult({ error: "Something went wrong." });
+      console.error("Compare error:", error);
+      setResult({
+        error: "Something went wrong while comparing candidates.",
+      });
     } finally {
       setLoading(false);
     }
   }
 
   function handleSaveCompareResult() {
-    if (!result || result.error) return;
+    if (
+      !result ||
+      result.error ||
+      typeof result.bestCandidateIndex !== "number" ||
+      !result.ranking ||
+      !result.summary ||
+      !result.candidates
+    ) {
+      setSaveState("failed");
+      setTimeout(() => setSaveState("idle"), 2000);
+      return;
+    }
 
-    saveCompareResult({
-      id: `compare-${Date.now()}`,
-      savedAt: new Date().toISOString(),
-      mode,
-      candidateNames: result.candidateNames || fallbackNames,
-      bestCandidateIndex: result.bestCandidateIndex || 0,
-      ranking: result.ranking || [],
-      summary: result.summary || "",
-      candidates: result.candidates || [],
-      comparison: result.comparison || null,
-    });
+    try {
+      const compareId = `compare-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`;
 
-    setSaveState("saved");
+      saveCompareResult({
+        id: compareId,
+        savedAt: new Date().toISOString(),
+        mode,
+        candidateNames:
+          result.candidateNames?.length ? result.candidateNames : fallbackNames,
+        bestCandidateIndex: result.bestCandidateIndex,
+        ranking: result.ranking,
+        summary: result.summary,
+        candidates: result.candidates,
+        comparison: result.comparison || null,
+      });
+
+      setSaveState("saved");
+      setTimeout(() => setSaveState("idle"), 2000);
+    } catch (error) {
+      console.error("Save compare failed:", error);
+      setSaveState("failed");
+      setTimeout(() => setSaveState("idle"), 2000);
+    }
   }
 
+  const cleanedSummary = result?.summary
+    ?.replaceAll("Candidate 0", getCandidateName(0))
+    ?.replaceAll("Candidate 1", getCandidateName(1))
+    ?.replaceAll("Candidate 2", getCandidateName(2))
+    ?.replaceAll("Candidate 3", getCandidateName(3));
+
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-16 text-white">
+    <main className="min-h-screen bg-white px-6 py-16 text-slate-900">
       <div className="mx-auto max-w-7xl">
+        <div className="mb-8">
+          <p className="text-sm uppercase tracking-[0.2em] text-blue-700">
+            CandEntry Compare
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold sm:text-5xl">
+            Compare Candidates
+          </h1>
+          <p className="mt-3 max-w-3xl text-slate-600">
+            Compare saved candidates from your dashboard and generate a ranked
+            recommendation with clear reasoning.
+          </p>
+        </div>
 
-        {/* BUTTONS */}
-        <button onClick={handleCompare} className="mb-4 bg-cyan-500 px-4 py-2 rounded">
-          Compare
-        </button>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 shadow-sm">
+          <div className="mb-6">
+            <label className="mb-3 block text-sm font-medium text-slate-700">
+              Recruiter Mode
+            </label>
 
-        {result && !result.error && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {(
+                [
+                  "strict",
+                  "balanced",
+                  "growth",
+                  "candidateFriendly",
+                ] as RecruiterMode[]
+              ).map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setMode(item)}
+                  className={`rounded-xl border px-4 py-3 text-sm transition ${
+                    mode === item
+                      ? "border-blue-200 bg-blue-50 text-blue-700"
+                      : "border-slate-300 bg-white text-slate-600 hover:border-blue-200 hover:text-slate-900"
+                  }`}
+                >
+                  {modeLabels[item]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <h2 className="text-xl font-semibold">Selected Candidates</h2>
+
+            {selectedCandidates.length === 0 ? (
+              <p className="mt-4 text-slate-500">
+                No candidates selected. Go to the dashboard and select at least
+                2 candidates.
+              </p>
+            ) : (
+              <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {selectedCandidates.map((candidate) => (
+                  <div
+                    key={candidate.id}
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-5"
+                  >
+                    <h3 className="truncate text-lg font-semibold text-slate-900">
+                      {candidate.fileName}
+                    </h3>
+
+                    <div className="mt-3 space-y-1 text-sm text-slate-500">
+                      <p>Score: {candidate.hireScore}/100</p>
+                      <p>Decision: {candidate.finalDecision}</p>
+                      <p>Tech Match: {candidate.technicalMatch}/100</p>
+                      <p>Experience Match: {candidate.experienceMatch}/100</p>
+                      <p>Risk Score: {candidate.riskScore}/100</p>
+                      <p className="pt-1">
+                        Status:{" "}
+                        <span className="text-slate-700">
+                          {candidate.status}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {localError && (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {localError}
+            </div>
+          )}
+
           <button
-            onClick={handleDownloadPdf}
-            className="mb-4 ml-4 bg-green-500 px-4 py-2 rounded"
+            onClick={handleCompare}
+            disabled={loading || selectedCandidates.length < 2}
+            className="mt-6 flex w-full items-center justify-center rounded-xl bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Download PDF
+            {loading ? (
+              <span className="flex items-center gap-3">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Comparing candidates...
+              </span>
+            ) : (
+              `Compare Candidates${
+                selectedCandidates.length ? ` (${selectedCandidates.length})` : ""
+              }`
+            )}
           </button>
-        )}
+        </div>
 
-        {/* RESULT */}
         {result && (
           <div
             id="compare-print-area"
-            className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-8"
+            className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-8 shadow-sm"
           >
             {result.error ? (
-              <p className="text-red-400">{result.error}</p>
+              <>
+                <h2 className="text-2xl font-semibold">Compare Failed</h2>
+                <p className="mt-4 text-red-600">{result.error}</p>
+              </>
             ) : (
               <>
-                <h2 className="text-2xl font-semibold">
-                  Winner: {winnerName}
-                </h2>
+                <div className="mb-8 border-b border-slate-200 pb-6">
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                    CandEntry AI Hiring Report
+                  </p>
+                  <h1 className="mt-2 text-3xl font-bold text-slate-900">
+                    Candidate Comparison
+                  </h1>
+                  <div className="mt-3 space-y-1 text-sm text-slate-500">
+                    <p>Generated: {new Date().toLocaleString()}</p>
+                    <p>Recruiter Mode: {modeLabels[mode]}</p>
+                    <p>
+                      Compared Candidates:{" "}
+                      {result.candidateNames?.length
+                        ? result.candidateNames.join(" vs ")
+                        : fallbackNames.join(" vs ")}
+                    </p>
+                  </div>
+                </div>
 
-                <p className="mt-4 text-slate-300">{result.summary}</p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <h2 className="text-2xl font-semibold text-slate-900">
+                    Comparison Result
+                  </h2>
+
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={handleSaveCompareResult}
+                      className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm text-violet-700 transition hover:bg-violet-100"
+                    >
+                      {saveState === "saved"
+                        ? "Compare Saved"
+                        : saveState === "failed"
+                        ? "Save Failed"
+                        : "Save Compare Result"}
+                    </button>
+
+                    <button
+                      onClick={handleDownloadPdf}
+                      className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700 transition hover:bg-blue-100"
+                    >
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
+                  <p className="text-sm text-slate-500">Winner</p>
+                  <p className="mt-2 text-3xl font-bold text-blue-700">
+                    {winnerName}
+                  </p>
+                  <p className="mt-2 text-base text-slate-500">
+                    Top candidate based on overall score, technical match, and
+                    risk profile.
+                  </p>
+                </div>
+
+                {result.candidates?.length ? (
+                  <div className="mt-6 grid gap-6 md:grid-cols-2">
+                    {result.candidates.map((candidate, index) => (
+                      <div
+                        key={index}
+                        className="rounded-xl border border-slate-200 bg-white p-6"
+                      >
+                        <h3 className="text-2xl font-semibold text-slate-900">
+                          {getCandidateName(index)}
+                        </h3>
+
+                        <p className="mt-4 text-3xl font-bold text-blue-700">
+                          Score: {candidate.score}/100
+                        </p>
+
+                        <div className="mt-6">
+                          <h4 className="text-lg font-semibold text-green-700">
+                            Strengths
+                          </h4>
+                          <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-600">
+                            {candidate.strengths?.length ? (
+                              candidate.strengths.map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))
+                            ) : (
+                              <li>No strengths returned.</li>
+                            )}
+                          </ul>
+                        </div>
+
+                        <div className="mt-6">
+                          <h4 className="text-lg font-semibold text-red-700">
+                            Risks
+                          </h4>
+                          <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-600">
+                            {candidate.risks?.length ? (
+                              candidate.risks.map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))
+                            ) : (
+                              <li>No risks returned.</li>
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {result.comparison && (
+                  <>
+                    <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+                      <h3 className="text-2xl font-semibold text-slate-900">
+                        Head-to-Head
+                      </h3>
+                      <ul className="mt-4 space-y-3 text-slate-600">
+                        {result.comparison.dimensionWins?.map((item, i) => (
+                          <li key={i}>✔ {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+                      <h3 className="text-2xl font-semibold text-slate-900">
+                        Why Winner
+                      </h3>
+                      <ul className="mt-4 list-disc space-y-2 pl-5 text-slate-600">
+                        {result.comparison.whyWinner?.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+
+                      <h3 className="mt-8 text-2xl font-semibold text-slate-900">
+                        Why Others Lose
+                      </h3>
+                      <ul className="mt-4 list-disc space-y-2 pl-5 text-slate-600">
+                        {result.comparison.whyLoser?.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                )}
+
+                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+                  <h3 className="text-2xl font-semibold text-slate-900">
+                    Summary
+                  </h3>
+                  <p className="mt-4 leading-8 text-slate-600">
+                    {cleanedSummary}
+                  </p>
+                </div>
+
+                <div className="mt-10 text-center">
+                  <p className="text-sm text-slate-500">
+                    Generated by CandEntry AI
+                  </p>
+                  <p className="text-xs text-slate-400">candentry.com</p>
+                </div>
               </>
             )}
           </div>
@@ -218,7 +494,21 @@ function ComparePageContent() {
 
 export default function ComparePage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-white px-6 py-16 text-slate-900">
+          <div className="mx-auto max-w-7xl rounded-2xl border border-slate-200 bg-slate-50 p-8 shadow-sm">
+            <p className="text-sm uppercase tracking-[0.2em] text-blue-700">
+              CandEntry Compare
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold sm:text-5xl">
+              Compare Candidates
+            </h1>
+            <p className="mt-4 text-slate-600">Loading compare page...</p>
+          </div>
+        </main>
+      }
+    >
       <ComparePageContent />
     </Suspense>
   );

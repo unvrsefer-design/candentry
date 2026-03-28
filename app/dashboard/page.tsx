@@ -27,16 +27,16 @@ const decisionOptions = ["All", "Hire", "Consider", "Reject"] as const;
 const sourceOptions = ["All", "upload", "linkedin", "referral"] as const;
 
 function getDecisionColor(decision: SavedCandidate["finalDecision"]) {
-  if (decision === "Hire") return "text-green-400";
-  if (decision === "Consider") return "text-yellow-400";
-  return "text-red-400";
+  if (decision === "Hire") return "text-green-600";
+  if (decision === "Consider") return "text-amber-600";
+  return "text-red-600";
 }
 
 function getColumnStyle(status: CandidateStatus) {
-  if (status === "New") return "border-slate-700 bg-slate-900";
-  if (status === "Review") return "border-cyan-500/30 bg-cyan-500/5";
-  if (status === "Interview") return "border-purple-500/30 bg-purple-500/5";
-  return "border-red-500/30 bg-red-500/5";
+  if (status === "New") return "border-slate-200 bg-white";
+  if (status === "Review") return "border-blue-200 bg-blue-50";
+  if (status === "Interview") return "border-purple-200 bg-purple-50";
+  return "border-red-200 bg-red-50";
 }
 
 export default function DashboardPage() {
@@ -240,67 +240,67 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+    <main className="min-h-screen bg-white px-6 py-10 text-slate-900">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-cyan-300">
-              Candentry ATS
+            <p className="text-sm uppercase tracking-[0.2em] text-blue-700">
+              CandEntry ATS
             </p>
             <h1 className="mt-2 text-3xl font-semibold sm:text-5xl">
               All Candidates
             </h1>
-            <p className="mt-3 max-w-2xl text-slate-300">
+            <p className="mt-3 max-w-2xl text-slate-600">
               Review candidates from different sources, move them through your
               hiring pipeline, compare selected profiles, and open saved reports.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4">
-              <p className="text-sm text-slate-400">Total Candidates</p>
-              <p className="mt-2 text-2xl font-semibold text-cyan-300">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm">
+              <p className="text-sm text-slate-500">Total Candidates</p>
+              <p className="mt-2 text-2xl font-semibold text-blue-700">
                 {sourceCounts.total}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4">
-              <p className="text-sm text-slate-400">Shortlisted</p>
-              <p className="mt-2 text-2xl font-semibold text-green-300">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm">
+              <p className="text-sm text-slate-500">Shortlisted</p>
+              <p className="mt-2 text-2xl font-semibold text-green-600">
                 {shortlistCount}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4">
-              <p className="text-sm text-slate-400">Roles</p>
-              <p className="mt-2 text-2xl font-semibold text-violet-300">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm">
+              <p className="text-sm text-slate-500">Roles</p>
+              <p className="mt-2 text-2xl font-semibold text-violet-600">
                 {roles.length}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4">
-              <p className="text-sm text-slate-400">Selected for Compare</p>
-              <p className="mt-2 text-2xl font-semibold text-white">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm">
+              <p className="text-sm text-slate-500">Selected for Compare</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-900">
                 {selectedIds.length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <div className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm font-medium text-cyan-300">
+              <p className="text-sm font-medium text-blue-700">
                 Candidate Sources
               </p>
-              <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-300">
-                <span className="rounded-full border border-slate-700 px-3 py-1">
+              <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-600">
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
                   Upload: {sourceCounts.upload}
                 </span>
-                <span className="rounded-full border border-slate-700 px-3 py-1">
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
                   LinkedIn: {sourceCounts.linkedin}
                 </span>
-                <span className="rounded-full border border-slate-700 px-3 py-1">
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
                   Referral: {sourceCounts.referral}
                 </span>
               </div>
@@ -309,21 +309,21 @@ export default function DashboardPage() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleAddLinkedInCandidate}
-                className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm transition hover:border-cyan-400 hover:text-cyan-300"
+                className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm transition hover:border-blue-300 hover:bg-blue-100 hover:text-blue-700"
               >
                 Add LinkedIn Candidate
               </button>
 
               <button
                 onClick={handleAddReferralCandidate}
-                className="rounded-xl border border-violet-500/40 bg-violet-500/10 px-4 py-2 text-sm transition hover:border-violet-400 hover:text-violet-300"
+                className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm transition hover:border-violet-300 hover:bg-violet-100 hover:text-violet-700"
               >
                 Add Referral Candidate
               </button>
 
               <button
                 onClick={handleLoadDemoPool}
-                className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm transition hover:border-white hover:text-white"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900"
               >
                 Load Demo Pool
               </button>
@@ -331,39 +331,43 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <div className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-              <h2 className="text-lg font-semibold">Create Role</h2>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Create Role
+              </h2>
               <div className="mt-4 space-y-4">
                 <input
                   type="text"
                   value={newRoleTitle}
                   onChange={(e) => setNewRoleTitle(e.target.value)}
                   placeholder="Role title (e.g. Senior Frontend Developer)"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
                 />
 
                 <textarea
                   value={newRoleDescription}
                   onChange={(e) => setNewRoleDescription(e.target.value)}
                   placeholder="Short role description..."
-                  className="min-h-[120px] w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                  className="min-h-[120px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
                 />
 
                 <button
                   onClick={handleCreateRole}
-                  className="rounded-xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-cyan-400"
+                  className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
                 >
                   Create Role
                 </button>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-              <h2 className="text-lg font-semibold">Active Roles</h2>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Active Roles
+              </h2>
               {roles.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-400">
+                <p className="mt-4 text-sm text-slate-500">
                   No roles created yet.
                 </p>
               ) : (
@@ -371,10 +375,10 @@ export default function DashboardPage() {
                   {roles.map((role) => (
                     <div
                       key={role.id}
-                      className="rounded-xl border border-slate-800 bg-slate-900 p-4"
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-4"
                     >
-                      <p className="font-medium text-white">{role.title}</p>
-                      <p className="mt-1 text-sm text-slate-400">
+                      <p className="font-medium text-slate-900">{role.title}</p>
+                      <p className="mt-1 text-sm text-slate-500">
                         {role.description || "No description added."}
                       </p>
                     </div>
@@ -385,10 +389,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <div className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
           <div className="grid gap-4 lg:grid-cols-5">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Search
               </label>
               <input
@@ -396,12 +400,12 @@ export default function DashboardPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by file name, notes, or reasoning..."
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Decision Filter
               </label>
               <select
@@ -411,7 +415,7 @@ export default function DashboardPage() {
                     e.target.value as (typeof decisionOptions)[number]
                   )
                 }
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
               >
                 {decisionOptions.map((option) => (
                   <option key={option} value={option}>
@@ -422,7 +426,7 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Source Filter
               </label>
               <select
@@ -432,7 +436,7 @@ export default function DashboardPage() {
                     e.target.value as (typeof sourceOptions)[number]
                   )
                 }
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
               >
                 <option value="All">All Sources</option>
                 <option value="upload">Upload</option>
@@ -442,13 +446,13 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Role Filter
               </label>
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
               >
                 <option value="all">All Roles</option>
                 {roles.map((role) => (
@@ -460,12 +464,12 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex items-end">
-              <label className="flex w-full items-center gap-3 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-300">
+              <label className="flex w-full items-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-600">
                 <input
                   type="checkbox"
                   checked={shortlistOnly}
                   onChange={(e) => setShortlistOnly(e.target.checked)}
-                  className="h-4 w-4 accent-cyan-400"
+                  className="h-4 w-4 accent-blue-600"
                 />
                 Show shortlisted only
               </label>
@@ -478,24 +482,28 @@ export default function DashboardPage() {
             onClick={() => {
               window.location.href = `/compare?ids=${selectedIds.join(",")}`;
             }}
-            className="mb-8 rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-black transition hover:bg-cyan-400"
+            className="mb-8 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
           >
             Compare Selected ({selectedIds.length})
           </button>
         )}
 
         {candidates.length === 0 ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-10">
-            <h2 className="text-2xl font-semibold">No candidates yet</h2>
-            <p className="mt-3 text-slate-300">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-10 shadow-sm">
+            <h2 className="text-2xl font-semibold text-slate-900">
+              No candidates yet
+            </h2>
+            <p className="mt-3 text-slate-600">
               Save candidates from the analysis and bulk screening pages to start
               building your pipeline.
             </p>
           </div>
         ) : filteredCandidates.length === 0 ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-10">
-            <h2 className="text-2xl font-semibold">No matching candidates</h2>
-            <p className="mt-3 text-slate-300">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-10 shadow-sm">
+            <h2 className="text-2xl font-semibold text-slate-900">
+              No matching candidates
+            </h2>
+            <p className="mt-3 text-slate-600">
               Try adjusting your search or filter settings.
             </p>
           </div>
@@ -522,19 +530,21 @@ export default function DashboardPage() {
                   className={`rounded-2xl border p-4 transition ${getColumnStyle(
                     column
                   )} ${
-                    dragOverColumn === column ? "ring-2 ring-cyan-400/50" : ""
+                    dragOverColumn === column ? "ring-2 ring-blue-300" : ""
                   }`}
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">{column}</h2>
-                    <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      {column}
+                    </h2>
+                    <span className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs text-slate-600">
                       {columnCandidates.length}
                     </span>
                   </div>
 
                   <div className="space-y-4">
                     {columnCandidates.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-slate-700 px-4 py-8 text-center text-sm text-slate-500">
+                      <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">
                         Drag candidates here
                       </div>
                     ) : (
@@ -544,12 +554,12 @@ export default function DashboardPage() {
                           draggable
                           onDragStart={() => handleDragStart(candidate.id)}
                           onDragEnd={handleDragEnd}
-                          className={`rounded-xl border border-slate-800 bg-slate-950 p-4 ${
+                          className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${
                             draggedCandidateId === candidate.id ? "opacity-60" : ""
                           }`}
                         >
                           <div className="mb-3 flex items-start justify-between gap-3">
-                            <h3 className="min-w-0 truncate text-sm font-semibold text-white">
+                            <h3 className="min-w-0 truncate text-sm font-semibold text-slate-900">
                               {candidate.fileName}
                             </h3>
 
@@ -557,11 +567,11 @@ export default function DashboardPage() {
                               type="checkbox"
                               checked={selectedIds.includes(candidate.id)}
                               onChange={() => toggleSelect(candidate.id)}
-                              className="mt-1 h-4 w-4 shrink-0 accent-cyan-400"
+                              className="mt-1 h-4 w-4 shrink-0 accent-blue-600"
                             />
                           </div>
 
-                          <div className="space-y-1 text-xs text-slate-400">
+                          <div className="space-y-1 text-xs text-slate-500">
                             <p>Score: {candidate.hireScore}/100</p>
                             <p className={getDecisionColor(candidate.finalDecision)}>
                               Decision: {candidate.finalDecision}
@@ -569,23 +579,23 @@ export default function DashboardPage() {
                             <p>Mode: {candidate.mode}</p>
                             <p>
                               Source:{" "}
-                              <span className="capitalize text-cyan-300">
+                              <span className="capitalize text-blue-700">
                                 {candidate.source}
                               </span>
                             </p>
                             <p>
                               Role:{" "}
-                              <span className="text-violet-300">
+                              <span className="text-violet-700">
                                 {getCandidateRoleName(candidate)}
                               </span>
                             </p>
                             {candidate.shortlist && (
-                              <p className="text-green-300">Shortlisted</p>
+                              <p className="text-green-600">Shortlisted</p>
                             )}
                           </div>
 
                           <div className="mt-4">
-                            <label className="mb-2 block text-xs font-medium text-slate-300">
+                            <label className="mb-2 block text-xs font-medium text-slate-700">
                               Assign Role
                             </label>
                             <select
@@ -593,7 +603,7 @@ export default function DashboardPage() {
                               onChange={(e) =>
                                 handleAssignRole(candidate.id, e.target.value)
                               }
-                              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white outline-none"
+                              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none"
                             >
                               <option value="unassigned">Unassigned</option>
                               {roles.map((role) => (
@@ -612,7 +622,7 @@ export default function DashboardPage() {
                               className={`rounded-lg px-3 py-1 text-xs ${
                                 candidate.shortlist
                                   ? "bg-green-600 text-white"
-                                  : "bg-slate-700 text-slate-300"
+                                  : "bg-slate-100 text-slate-700"
                               }`}
                             >
                               {candidate.shortlist
@@ -635,8 +645,8 @@ export default function DashboardPage() {
                             </button>
                           </div>
 
-                          <div className="mt-4 rounded-lg border border-slate-800 bg-slate-900 p-3">
-                            <label className="mb-2 block text-xs font-medium text-slate-300">
+                          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                            <label className="mb-2 block text-xs font-medium text-slate-700">
                               Notes
                             </label>
 
@@ -646,7 +656,7 @@ export default function DashboardPage() {
                                 handleNoteChange(candidate.id, e.target.value)
                               }
                               placeholder="Recruiter notes..."
-                              className="min-h-[90px] w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none placeholder:text-slate-500"
+                              className="min-h-[90px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
                             />
 
                             <div className="mt-2 flex justify-end">

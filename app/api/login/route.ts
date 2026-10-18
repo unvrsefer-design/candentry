@@ -1,42 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   AUTH_COOKIE_NAME,
-  buildAuthCookieValue,
-  getDemoCredentials,
+  authenticateUser,
+  createSessionToken,
 } from "@/lib/auth";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await request.json();
+
     const username = String(body?.username || "");
     const password = String(body?.password || "");
 
-    const creds = getDemoCredentials();
+    const user = authenticateUser(username, password);
 
-    if (username !== creds.username || password !== creds.password) {
+    if (!user) {
       return NextResponse.json(
-        { error: "Invalid username or password." },
-        { status: 401 }
+        {
+          error: "Invalid username or password.",
+        },
+        {
+          status: 401,
+        }
       );
     }
 
-    const res = NextResponse.json({ ok: true });
+    const token = await createSessionToken(user);
 
-    res.cookies.set({
-      name: AUTH_COOKIE_NAME,
-      value: buildAuthCookieValue(username),
-      httpOnly: true,
-      sameSite: "lax",
-      secure: true,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+    const response = NextResponse.json({
+      ok: true,
+      user,
     });
 
-    return res;
+    response.cookies.set({
+      name: AUTH_COOKIE_NAME,
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 12,
+    });
+
+    return response;
   } catch {
     return NextResponse.json(
-      { error: "Login request failed." },
-      { status: 500 }
+      {
+        error: "Login request failed.",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }
